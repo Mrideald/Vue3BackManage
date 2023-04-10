@@ -44,6 +44,31 @@ removeEventListener(type, listener, useCapture);
 
 这些和添加指定的事件参数一样 你怎么添加就怎么移除
 
+### 获取模板中组件的方式
+
+~~~
+  <form-drawer ref="formDrawerRef">
+    123
+  </form-drawer>
+  
+  <script setup>
+  import FormDrawer from '@/components/FormDrawer.vue'
+  //控制修改密码框
+   const formDrawerRef=ref(null);
+   后续可以使用组件内的方法
+  </script>
+~~~
+
+### 模板中动态绑定图标
+
+~~~
+<el-icon>
+  <component :is="item.icon"></component>
+</el-icon>
+~~~
+
+
+
 # 使用vue-router
 
 下载路由四版本
@@ -732,4 +757,251 @@ const {
       </el-icon>
       </el-tooltip>
 ~~~
+
+
+
+# defineProps() 和 defineEmits() defineExpose()
+
+setup语法糖内使用 的props 以及自定义事件 暴露组件内方法
+
+~~~
+defineProps():
+
+在Vue 3中，定义组件的props属性有了新的方式，即使用defineProps() API来定义，它接收一个对象作为参数，对象的属性为props的名称，值为定义的类型和默认值等。defineProps()的作用是定义组件的props属性，通过这个方法定义的props属性会被Vue 3编译器静态分析，这样可以优化组件性能。
+
+defineEmits():
+
+在Vue 3中，定义组件的自定义事件有了新的方式，即使用defineEmits() API来定义，它接收一个数组作为参数，数组的元素为事件名称，这些事件名称是组件可以触发的自定义事件。通过这个方法定义的自定义事件会被Vue 3编译器静态分析，这样可以优化组件性能。
+
+defineExpose():
+
+在Vue 3中，定义组件的公共API有了新的方式，即使用defineExpose() API来定义，它接收一个对象作为参数，对象的属性为组件的公共API名称，值为对应的方法或属性等。通过这个方法定义的公共API会被Vue 3编译器静态分析，这样可以优化组件性能。同时，使用这个方法可以更好地控制组件暴露的API，避免组件内部的实现细节被外部访问到，提高组件的封装性。
+~~~
+
+~~~
+例子
+封装组件内 defineProps()使用
+<script setup>
+...
+
+直接使用里面的数据在模板中  可以用props接收也可以不用
+const props=defineProps({
+    title:String,
+    size:{
+        type:String,
+        default:"45%"
+    },
+    destroyOnClose:{
+      type:Boolean,
+      default:false
+    },
+    comfirmText:{
+        type:String,
+        default:"提交"
+    }
+})
+...
+</script>
+
+
+在使用组件的地方传值 和之前一样
+~~~
+
+~~~
+自定义事件 defineEmits():
+ <el-button type="primary" @click="submit" :loading="loading">提交</el-button>
+ 
+ 接收自定义事件 const emit = defineEmits(['submit'])  //可以写多个事件
+ 
+ 封装组件内写一个点击事件 
+ 回调写为调用这个点击事件const submit=()=>emit("submit")  //使用自定义事件
+ 
+ 调用自定义事件  组件标签内
+  <form-drawer ref="formDrawerRef" title="修改密码"@submit="onSubmit">
+ 
+ 写下自定义事件内容
+ const onSubmit = () => {
+/////......
+};
+~~~
+
+~~~
+defineExpose() 暴露组件内属性和方法 在其他使用这个组件的地方调用
+//暴露方法
+defineExpose({
+    open,
+    close,
+    showLoading,
+    hideLoading
+})
+
+//使用这些方法
+  <form-drawer ref="formDrawerRef" title="修改密码" @submit="onSubmit">
+  </form-drawer>
+  
+  上面为组件 
+  获取组件
+  const formDrawerRef=ref(null)
+  使用组件的方法 formDrawer.value.open()  以此类推
+~~~
+
+
+
+# 封装方法 
+
+> 一个功能完成之后 可以将所用的方法全部集合到一个函数中 函数返回值为这些方法 可以单独携程一个文件封装
+>
+> 再引入这些方法即可   组合式API方法
+
+~~~
+封装登录和修改密码方法  返回方法名
+
+import { updatePassword } from "@/api/manager.js";
+import { ref, reactive } from "vue";
+import { useRouter } from "vue-router";
+import { toast } from "@/composables/util.js";
+import { useStore } from "vuex";
+
+export default function useRepassword() {
+  const router = useRouter();
+  const store = useStore();
+
+  const formRef = ref(null);
+  //控制修改密码框
+  const formDrawerRef = ref(null);
+
+  const form = reactive({
+    oldpassword: "",
+    password: "",
+    repassword: "",
+  });
+
+  const rules = {
+    oldpassword: [
+      {
+        required: true,
+        message: "旧密码不能为空",
+        trigger: "blur",
+        //触发时机
+      },
+    ],
+    password: [
+      {
+        required: true,
+        message: "新密码不能为空",
+        trigger: "blur",
+        //触发时机
+      },
+    ],
+    repassword: [
+      {
+        required: true,
+        message: "确认密码不能为空",
+        trigger: "blur",
+        //触发时机
+      },
+    ],
+  };
+
+  const onSubmit = () => {
+    formRef.value.validate((valid) => {
+      if (!valid) {
+        return false;
+      } else {
+        formDrawerRef.value.showLoading();
+        //修改密码
+        updatePassword(form)
+          .then((res) => {
+            toast("修改密码成功,请重新登录");
+            store.dispatch("logOut").then((res) => {
+              router.push("/login");
+            });
+          })
+          .finally(() => {
+            formDrawerRef.value.hideLoading();
+          });
+      }
+    });
+  };
+
+  //处理修改密码
+  const handleUpdataPaw = () => {
+    formDrawerRef.value.open();
+  };
+  return {
+    formDrawerRef,
+    form,
+    rules,
+    onSubmit,
+    formRef,
+    handleUpdataPaw,
+  };
+}
+
+引入使用
+import useRepassword from "@/composables/useManager.js";
+使用
+const { formDrawerRef, form, rules, onSubmit, formRef, handleUpdataPaw } =
+ useRepassword();
+
+使用方法和之前一样 任何功能都可以参照这个实现 可以优化代码 然后利于维护
+~~~
+
+
+
+# 菜单收缩问题
+
+> ​	点击收缩按钮后让菜单收缩
+
+~~~
+现在vuex的state中存一下原来的菜单宽度
+state:{
+  //侧边宽度
+   asideWidth:"250px",
+   }
+   
+   mutations中添加修改的方法
+   //展开/缩起侧边
+    handleAsideWidth(state){
+      state.asideWidth=state.asideWidth=="250px"?"64px":"250px"
+    },
+    如果他是250px 则修改为64px
+    
+    
+    方法添加好之后去设置点击事件
+     @click="$store.commit('handleAsideWidth')"  实现宽度的改变
+     
+     宽度改变之后样式还是有问题 文字还是在显示
+     下面用的elementui的collapse方法 :collapse="isCollapse"
+     //是否折叠
+     const isCollapse=computed(()=>!(store.state.asideWidth=='250px'))
+     
+     有一些属性去研究一下 比如动画显示太慢会有点问题 可以取消这个动画自己写一个动画
+     transition: all 0.2s;
+     
+     第二个问题是这边宽度变小之后 右边的元素要过来
+     给el-aside设置宽度为 <el-aside :width="$store.state.asideWidth">
+     并且给整个侧边添加动画
+     .el-aside{
+     transition: all 0.2s;
+      }
+      
+      /* 隐藏滚动条 */
+    .f-menu::-webkit-scrollbar{
+       width: 0;
+      }
+~~~
+
+2. 刷新之后路由还是原来的样子的问题
+
+   ~~~
+   :default-active="defaultActive" el-menu的属性
+   
+   import {useRouter,useRoute} from 'vue-router'
+   const route=useRoute()
+   const defaultActive=ref(route.path)
+   ~~~
+
+
+
 

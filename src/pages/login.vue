@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { ref, reactive,onMounted,onBeforeUnmount } from "vue";
+import { ref, reactive, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { toast } from "@/composables/util.js";
 import { useStore } from "vuex";
@@ -98,7 +98,9 @@ const onSubmit = () => {
     } else {
       loading.value = true;
       //登录
-      store.dispatch("login", form).then((res) => {
+      store
+        .dispatch("login", form)
+        .then((res) => {
           toast("登录成功");
           //跳转到后台首页
           router.push("/");
@@ -106,39 +108,25 @@ const onSubmit = () => {
         .finally(() => {
           loading.value = false;
         });
-      // login(form.username, form.password)
-      //   .then((res) => {
-      //     //提示成功
-      //     toast("登录成功")
-      //     //存储token和用户相关的信息
-      //     setToken(res.token)
-
-      //     //跳转到后台首页
-      //     router.push('/')
-      //   })
-      //   .finally(()=>{
-      //     loading.value=false
-      //   })
     }
   });
 };
 
 //监听回车事件
-function onKeyUp(e){
-  if(e.key=="Enter"){
-    onSubmit()
+function onKeyUp(e) {
+  if (e.key == "Enter") {
+    onSubmit();
   }
 }
 //挂载完毕后添加事件
-onMounted(()=>{
-  document.addEventListener("keyup",onKeyUp)
-})
+onMounted(() => {
+  document.addEventListener("keyup", onKeyUp);
+});
 
 //移除键盘监听
-onBeforeUnmount(()=>{
-  document.removeEventListener("keyup",onKeyUp)
-})
-
+onBeforeUnmount(() => {
+  document.removeEventListener("keyup", onKeyUp);
+});
 </script>
 
 <style>
