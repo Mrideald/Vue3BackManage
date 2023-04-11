@@ -67,6 +67,16 @@ removeEventListener(type, listener, useCapture);
 </el-icon>
 ~~~
 
+### 检查路由是否存在
+
+- [`router.hasRoute()`](https://router.vuejs.org/zh/api/interfaces/Router.html#Methods-hasRoute)：检查路由是否存在。
+
+ 参数为路由的名字 name 返回值为布尔值
+
++ router.getRoutes():获取当前所有路由	
+
+
+
 
 
 # 使用vue-router
@@ -1004,4 +1014,130 @@ state:{
 
 
 
+# 添加动态路由
+
+实现根据后端传回来的数据，传回来什么就添加什么路由
+
+## 添加路由
+
+动态路由主要通过两个函数实现。`router.addRoute()` 和 `router.removeRoute()`。它们**只**注册一个新的路由，也就是说，如果新增加的路由与当前位置相匹配，就需要你用 `router.push()` 或 `router.replace()` 来**手动导航**，才能显示该新路由。
+
+~~~
+添加路由只能一个个添加 router.addRoute() 添加之后跳转这些路由的时候只能用push或者replace跳转才会显示这些路由 如果不是会导致无法显示的问题
+
+~~~
+
+## 动态添加
+
+~~~
+默认路由 所有组件共享的路由 比如主页面还有登录页 404页这些要实实在在的注册使用
+​~~~
+//默认路由 所有路由共享
+const routes= [
+    {
+      path: "/",
+      name:"admin",
+      component: Admin,
+    },
+    { path: "/:pathMatch(.*)*",
+      name: "NotFound",
+      component: NotFound
+    },
+    {
+      path: "/login",
+      component: login,
+      meta: {
+        title: "登录页",
+      },
+    },
+  ];
+  
+  ...
+  export const router=createRouter({
+    history:createWebHashHistory(),
+    routes
+   })
+  ...
+
+//动态路由 用于匹配菜单 动态添加路由，路由的信息都是由后端穿过来然后渲染的 如果有路由组件要注册，则在这里写信息，不直接写在routes里面注册使用，这里写之后在后面动态匹配，匹配上了如果有这个组件在这里注册了，但是路由router里面没有的话就要动态添加上去 
+const asyncRoutes=[
+    {
+      path: "/",
+      name: "/",
+      component: Index,
+      meta: {
+        title: "后台首页",
+      },
+    },
+    {
+      path:"/goods/list",
+      name:"/goods/list",
+      component:GoodList,
+      meta:{
+        title:"商品管理"
+      }
+    },
+    {
+      path:"/category/list",
+      name:"/category/list",
+      component:CategoryList,
+      meta:{
+        title:"分类管理"
+      }
+    }
+  ]
+  
+
+~~~
+
+~~~js
+//添加路由的方法
+//动态添加路由  递归
+export function addRoutes(menus){
+    //是否有新路由
+    let hasNewRouters=false
+    //定义一个添加路由的方法 参数为传入的菜单数组
+   const findAndAddRoutesByMenus=(arr)=>{
+    //foreach获取到数组里的每一项
+     arr.forEach(e=>{
+    //找到满足条件的第一项 否则返回undefined
+       let item=asyncRoutes.find(o=>o.path==e.frontpath)
+       //如果有item(有这个组件) 且路由里面没有这个路由
+       if(item &&!router.hasRoute(item.path)){
+        //添加嵌套路由 第一个参数是父级路由名字 第二个参数是路由
+          router.addRoute("admin",item)
+          hasNewRouters=true
+       }
+       //如果存在子菜单 则再调用一次 传入数据为子菜单的数组
+       if(e.child &&e.child.length>0){
+         findAndAddRoutesByMenus(e.child)  //递归
+       }
+     })
+   }
+   //执行传入的数组 
+   findAndAddRoutesByMenus(menus)
+   //console.log(router.getRoutes())
+   return hasNewRouters  //如果有新路由 把布尔值返回出去
+  }
+~~~
+
+~~~
+在路由前置守卫中调用
+//引入动态添加路由的方法
+import { addRoutes } from "@/router";
+...
+router.beforeEach(async (to, from, next)=>{
+//如果用户登录了，自动获取用户信息并存储在vuex中
+  let hasNewRoutes = false;//判断是否有新路由添加过啊来
+  if (token) {
+    let { menus } = await store.dispatch("getInfo");
+    //动态添加路由  hasNewRoutes判断是否动态添加了路由
+    hasNewRoutes = addRoutes(menus);  //返回值为true就表示有新路由添加过来
+  }
+  ...
+/如果动态添加了路由 则访问指定路由 因为如果访问的指定路由为动态路由 所以要next(to.fullpath) 指定访问 否则next（）
+  hasNewRoutes ? next(to.fullPath) : next();
+  ...
+}
+~~~
 
