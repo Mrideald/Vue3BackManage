@@ -7,6 +7,8 @@ import store from "@/store";
 import { addRoutes } from "@/router";
 
 //全局前置守卫
+//定义一个变量 如果已经获取了info就不再获取了 不然每次路由跳转都要执行这个
+let hasGetInfo=false
 router.beforeEach(async (to, from, next) => {
   //显示loading
   showFullLoading();
@@ -24,7 +26,9 @@ router.beforeEach(async (to, from, next) => {
 
   //如果用户登录了，自动获取用户信息并存储在vuex中
   let hasNewRoutes = false;
-  if (token) {
+  if (token&&!hasGetInfo) {
+    //让这个变量为true 不再获取info和动态添加路由
+    hasGetInfo=true
     let { menus } = await store.dispatch("getInfo");
     //动态添加路由  hasNewRoutes判断是否动态添加了路由
     hasNewRoutes = addRoutes(menus);

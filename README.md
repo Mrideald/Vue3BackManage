@@ -77,7 +77,57 @@ removeEventListener(type, listener, useCapture);
 
 
 
+### 直接用elementui的class写样式无效问题
 
+~~~
+elementui的样式都添加了scoped属性，以确保它们只适用于当前组件，不会影响全局样式。这是一种常见的Vue组件样式隔离方法。
+
+element标签上的class写样式无效     深度选择器
+在vue中，我们为了避免父组件的样式影响到子组件的样式，会在 <style> 标签上设置scoped属性，这样它的 CSS 只会应用到当前组件的元素上，即使父组件中有跟子组件相同的class名称或者选择器的时候，也不会影响到子组件的样式。
+但是有的时候我们需要在一个组件中改变被引入组件的样式（即父组件改变子组件的样式），直接使用class命名改变样式没有任何反应，这种情况就需要使用/deep/或::v-deep vue3中:deep()了。
+
+~~~
+
+~~~
+
+:deep(.el-tabs__header){
+    @apply mb-0;
+}
+在前面用:deep包裹起class名字 并且要在style中加入scoped
+~~~
+
+~~~
+正常使用
+
+    :deep(.el-input__wrapper) {
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+      background: rgba(0, 0, 0, 0.1);
+    }
+    :deep(.el-input-group--append > .el-input__wrapper) {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    :deep(.el-input-group--prepend > .el-input__wrapper) {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+~~~
+
+### onBeforeRouteUpdate
+
+路由更新之前可以做的一些事情
+
+import {onBeforeRouteUpdate} from 'vue-router'
+
+> *//添加一个新的标签导航*
+
+onBeforeRouteUpdate((*to*,*from*)=>{
+
+​    activeTab.value=*to*.path
+
+   addTags({title:*to*.meta.title,path:*to*.path});
+
+})
 
 # 使用vue-router
 
