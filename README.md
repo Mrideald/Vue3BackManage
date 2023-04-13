@@ -129,6 +129,164 @@ onBeforeRouteUpdate((*to*,*from*)=>{
 
 })
 
+
+
+
+
+### KeepAlive
+
+缓存包裹在其中的动态切换组件。
+
+- **Props**
+
+  ts
+
+  ```ts
+  interface KeepAliveProps {
+    /**
+     * 如果指定，则只有与 `include` 名称
+     * 匹配的组件才会被缓存。
+     */
+    include?: MatchPattern
+    /**
+     * 任何名称与 `exclude`
+     * 匹配的组件都不会被缓存。
+     */
+    exclude?: MatchPattern
+    /**
+     * 最多可以缓存多少组件实例。
+     */
+    max?: number | string
+  }
+  
+  type MatchPattern = string | RegExp | (string | RegExp)[]
+  ```
+
+- **详细信息**
+
+  `<KeepAlive>` 包裹动态组件时，会缓存不活跃的组件实例，而不是销毁它们。
+
+  任何时候都只能有一个活跃组件实例作为 `<KeepAlive>` 的直接子节点。
+
+  当一个组件在 `<KeepAlive>` 中被切换时，它的 `activated` 和 `deactivated` 生命周期钩子将被调用，用来替代 `mounted` 和 `unmounted`。这适用于 `<KeepAlive>` 的直接子节点及其所有子孙节点。
+
+- **示例**
+
+  基本用法：
+
+  template
+
+  ```
+  <KeepAlive>
+    <component :is="view"></component>
+  </KeepAlive>
+  ```
+
+  与 `v-if` / `v-else` 分支一起使用时，同一时间只能有一个组件被渲染：
+
+  template
+
+  ```
+  <KeepAlive>
+    <comp-a v-if="a > 1"></comp-a>
+    <comp-b v-else></comp-b>
+  </KeepAlive>
+  ```
+
+  与 `<Transition>` 一起使用：
+
+  template
+
+  ```
+  <Transition>
+    <KeepAlive>
+      <component :is="view"></component>
+    </KeepAlive>
+  </Transition>
+  ```
+
+  使用 `include` / `exclude`：
+
+  template
+
+  ```
+  <!-- 用逗号分隔的字符串 -->
+  <KeepAlive include="a,b">
+    <component :is="view"></component>
+  </KeepAlive>
+  
+  <!-- 正则表达式 (使用 `v-bind`) -->
+  <KeepAlive :include="/a|b/">
+    <component :is="view"></component>
+  </KeepAlive>
+  
+  <!-- 数组 (使用 `v-bind`) -->
+  <KeepAlive :include="['a', 'b']">
+    <component :is="view"></component>
+  </KeepAlive>
+  ```
+
+  使用 `max`：
+
+  template
+
+  ```
+  <KeepAlive :max="10">
+    <component :is="view"></component>
+  </KeepAlive>
+  ```
+
+例子：
+
+~~~
+<!-- v-slot解构到渲染的动态组件 -->
+<router-view v-slot="{ Component }">
+<!-- 只允许缓存十个，超过十个了最久没有访问的那一个会被销毁 -->
+<keep-alive :max="10">
+<component :is="Component"></component>
+</keep-alive>
+</router-view>
+~~~
+
+### router-view的几个属性
+
+~~~
+<router-view> 标签有以下几个属性：
+
+name：用于命名路由视图。当你需要在同一个组件中渲染多个 <router-view> 时，可以通过 name 属性来区分它们。
+
+:key：用于强制重新渲染路由视图。当你需要动态地更改路由参数（例如从 /user/1 切换到 /user/2）时，可以通过给 <router-view> 组件添加 :key 属性来触发重新渲染。
+
+v-slot：用于定义具名插槽，以便在路由组件中传递数据。例如，你可以使用以下方式向路由组件传递数据：
+获取到当前路由信息
+<router-view v-slot="{ route }">
+  <h1>{{ route.meta.title }}</h1>
+</router-view>
+```
+
+在上面的例子中，`v-slot` 属性允许你从路由组件中解构出 `route` 参数，并将 `route.meta.title` 渲染为标题。
+~~~
+
+
+
+### component标签
+
+~~~
+在Vue中，<component> 标签是一个动态组件，它允许你在父组件中根据不同的条件渲染不同的子组件。具体来说， <component> 标签会根据 is 属性的值来确定要渲染的组件类型。例如：
+
+<component :is="componentType"></component>
+在上面的例子中，componentType 是一个 data 属性，它的值决定了要渲染的组件类型。如果 componentType 的值为 "my-component"，那么 <component> 就会渲染 <my-component> 组件。如果 componentType 的值为 "other-component"，那么 <component> 就会渲染 <other-component> 组件。
+
+<component> 标签也支持使用 v-bind 指令绑定其他属性，例如 class、style 等。这些属性会被传递给被渲染的组件。例如：
+
+<component :is="componentType" class="my-class" :style="{ color: textColor }"></component>
+在上面的例子中，被渲染的组件会继承 <component> 标签的 class 和 style 属性，同时也可以在子组件中使用这些属性。
+~~~
+
+
+
+
+
 # 使用vue-router
 
 下载路由四版本
@@ -1189,5 +1347,126 @@ router.beforeEach(async (to, from, next)=>{
   hasNewRoutes ? next(to.fullPath) : next();
   ...
 }
+~~~
+
+
+
+# 骨架屏占位
+
+~~~
+<template>
+  <div>
+    <el-row :gutter="20">
+    //判断 如果有数据就不显示骨架 
+      <template v-if="panels.length==0">
+      <!-- 骨架屏占位 -->
+      <el-col :span="6" v-for="i in 4" :key="i">
+        <el-skeleton style="width: 100%;" animated loading>
+          <template #template>
+            <el-card shadow="hover" class="border-0">
+          <template #header>
+            <div class="flex justify-between">
+            //把要展示的数据全部用这个东西覆盖 并设置阴影长度
+                <el-skeleton-item variant="text" style="width: 50%;" />
+                <el-skeleton-item variant="text" style="width: 10%;" />
+            </div>
+          </template>
+          <el-skeleton-item variant="text" style="width: 80%;" />
+          <el-divider />
+          <div class="flex justify-between text-sm text-gray-500">
+            <el-skeleton-item variant="text" style="width: 50%;" />
+            <el-skeleton-item variant="text" style="width: 10%;" />
+          </div>
+        </el-card>
+          </template>
+        </el-skeleton>
+      </el-col>
+    </template>
+<!-- ------------- -->
+      <el-col
+        :span="6"
+        :offset="0"
+        v-for="(item, index) in panels"
+        :key="index"
+      >
+        <el-card shadow="hover" class="border-0">
+          <template #header>
+            <div class="flex justify-between">
+              <span class="text-sm">{{ item.title }}</span>
+              <el-tag :type="item.unitColor" effect="plain">
+                {{ item.unit }}
+              </el-tag>
+            </div>
+          </template>
+          <span class="text-3xl font-bold text-gray-500">
+            {{ item.value }}
+          </span>
+          <el-divider />
+          <div class="flex justify-between text-sm text-gray-500">
+            <span>{{ item.subTitle }}</span>
+            <span>{{ item.subValue }}</span>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script setup>
+import { ref } from "vue";
+import { getStatistics1 } from "@/api/index.js";
+const panels = ref([]);
+getStatistics1().then((res) => {
+  panels.value = res.panels;
+});
+</script>
+
+
+当数据还没返回过来的时候 使用骨架屏占个位 并设置动画和加载中的loading 
+用v-if判断 如果有数据的话就不显示骨架
+~~~
+
+# 动画展示加载数据gsap
+
+下载 npm i gsap
+
+使用
+
+~~~vue
+<template>
+  <div>
+    <!-- tofix保留几位 -->
+      //展示数据
+    {{ d.num.toFixed(0) }}
+  </div>
+</template>
+
+<script setup>
+import { reactive, watch } from "vue";
+import gsap from 'gsap'
+// 接收传来的值
+const props=defineProps({
+    value:{
+        type:Number,
+        default:0 //默认为0
+    }
+})
+//初始化数据
+const d = reactive({ num: 0 });
+
+function AnimateToValue(){
+    //第一个参数是指的哪个对象
+    gsap.to(d,{
+        duration:0.5,  //动画几秒
+        num:props.value  //改变到哪个数字
+    })
+}
+AnimateToValue()  //调用一遍函数
+//监听数据改变  如果传回来的数据改变了就再调用一遍函数开启动画
+    //第一个参数是监听哪个数据 第二个参数是监听到了做什么
+watch(()=>props.value,()=>{
+    AnimateToValue()
+})
+</script>
 ~~~
 

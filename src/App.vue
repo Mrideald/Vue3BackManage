@@ -7,6 +7,8 @@
   </div>
 </template>
 
-<style scoped>
-
+<style>
+body{
+  @apply bg-gray-100;
+}
 </style>
