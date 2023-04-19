@@ -3,8 +3,8 @@ import { ElNotification,ElMessageBox} from "element-plus";
 //引入进度条
 import nprogress from "nprogress";
 
-//消息提示
-export function toast(message,type="success",dangerouslyUseHTMLString=false){
+//消息提示  第三个参数是渲染html提示 如果提示内容为html代码 则自动渲染
+export function toast(message,type="success",dangerouslyUseHTMLString=true){
     //默认成功
     ElNotification({
         type,
@@ -13,7 +13,7 @@ export function toast(message,type="success",dangerouslyUseHTMLString=false){
         dangerouslyUseHTMLString
       });
 }
-
+// 删除完成 6.10开始
 //消息弹出框
 export function showModal(content="提示内容",type="warning",title=""){
   return ElMessageBox.confirm(

@@ -48,7 +48,6 @@ onMounted(() => {
     //init初始化图表
     myChart = echarts.init(chartDom);
     useResizeObserver(el, (entries) => {
-      console.log(entries,'entries');
       //每次缩放都会触发这个方法
       myChart.resize(); //改变图标尺寸 参数不指定的话自动获取dom宽度
     });

@@ -1,4 +1,8 @@
-# Vue3+vite
+#  Vue3+vite
+
+
+
+难点：封装组件 formDrawer 面试前看懂
 
 ## 积累Space
 
@@ -1027,12 +1031,16 @@ const props=defineProps({
 
 ~~~
 自定义事件 defineEmits():
+封装组件内：
  <el-button type="primary" @click="submit" :loading="loading">提交</el-button>
  
- 接收自定义事件 const emit = defineEmits(['submit'])  //可以写多个事件
+ //可以理解为定义自定义事件 前面的const emit可写可不写
+ 放出自定义事件 const emit = defineEmits(['submit'])  //可以写多个事件
  
- 封装组件内写一个点击事件 
+ 封装组件内写一个点击事件  可以理解为放出自定义事件
  回调写为调用这个点击事件const submit=()=>emit("submit")  //使用自定义事件
+ 上面这个写法可以简化在button里面 免得写多个自定义事件都要写个这个
+ <el-button type="primary" @click="$emit('submit')" :loading="loading">提交</el-button>
  
  调用自定义事件  组件标签内
   <form-drawer ref="formDrawerRef" title="修改密码"@submit="onSubmit">
@@ -1041,6 +1049,12 @@ const props=defineProps({
  const onSubmit = () => {
 /////......
 };
+
+总结四步
+1.定义自定义事件defineEmits(['submit'])
+2.放出定义事件 <button @click="$emit('submit')></button>		
+3.组件标签内使用自定义事件 <form-drawer ref="formDrawerRef" title="修改密码"@submit="onSubmit">
+4.事件回调函数 OnSubmit()写在使用改组件的地方
 ~~~
 
 ~~~
@@ -1571,5 +1585,33 @@ prevNode：之前的渲染中代表指令所绑定元素的 VNode。仅在 befor
 
 
 
+~~~
+
+
+
+
+
+# 修改和新增动态使用封装组件
+
+~~~vue
+  <!-- 封装的框组件 -->
+//动态获取标题 获取到当前节点 获取到之后可以使用该组件内暴露的方法 使用组件内的自定义事件 回调写在本组件内
+  <FormDrawer :title="drawerTitle" ref="formDrawer" @submit="handleSubmit">
+      //绑定表单内容 获取到表单节点供验证 表单规则
+    <el-form :model="form" ref="formRef" :rules="rules" :inline="false">
+      <el-form-item label="分类名称" prop="name">
+        <el-input v-model="form.name"></el-input>
+      </el-form-item>
+      <el-form-item label="排序" prop="order">
+        <el-input-number
+          v-model="form.order"
+          :min="0"
+          :max="1000"
+        ></el-input-number>
+      </el-form-item>
+    </el-form>
+</FormDrawer>
+
+自己去看吧src/components/imageAside.vue 注释很完整
 ~~~
 
