@@ -5,8 +5,8 @@
       </el-header>
       <el-container>
         <!-- 主体和侧边抽离 -->
-        <ImageAside ref="ImageAsideRef"/>
-        <ImageMain/>
+        <ImageAside ref="ImageAsideRef" @change="handleAsideChange"/>
+        <ImageMain ref="ImageMainRef"/>
       </el-container>
     </el-container>
 </template>
@@ -20,10 +20,15 @@ const h=windowHeight-64-44-40
 
 //获取到子组件节点
 const ImageAsideRef=ref(null)
+const ImageMainRef=ref(null)
 
 //使用子组件内方法打开表单
 const handleOpenClick=()=>{
   ImageAsideRef.value.handleCreate()
+}
+//接收分类列表的自定义
+const handleAsideChange=(image_class_id)=>{
+  ImageMainRef.value.loadData(image_class_id)
 }
 
 </script>

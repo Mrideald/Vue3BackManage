@@ -1052,7 +1052,11 @@ const props=defineProps({
 
 总结四步
 1.定义自定义事件defineEmits(['submit'])
-2.放出定义事件 <button @click="$emit('submit')></button>		
+2.使用定义事件 <button @click="$emit('submit')></button>	
+如果不是在组件标签内使用这个事件 那么定义自定义事件的时候要定义一个名字
+   1.const emit=defineEmits(['submit'])
+   2.使用自定义事件 emit("submit")  回调写在另外的组件内
+   3.下面的步骤和下面一样
 3.组件标签内使用自定义事件 <form-drawer ref="formDrawerRef" title="修改密码"@submit="onSubmit">
 4.事件回调函数 OnSubmit()写在使用改组件的地方
 ~~~
@@ -1614,4 +1618,6 @@ prevNode：之前的渲染中代表指令所绑定元素的 VNode。仅在 befor
 
 自己去看吧src/components/imageAside.vue 注释很完整
 ~~~
+
+
 

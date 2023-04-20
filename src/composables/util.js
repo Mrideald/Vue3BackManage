@@ -13,8 +13,7 @@ export function toast(message,type="success",dangerouslyUseHTMLString=true){
         dangerouslyUseHTMLString
       });
 }
-// 删除完成 6.10开始
-//消息弹出框
+//确认消息弹出框
 export function showModal(content="提示内容",type="warning",title=""){
   return ElMessageBox.confirm(
     content,
@@ -25,6 +24,15 @@ export function showModal(content="提示内容",type="warning",title=""){
       type
     }
   )
+}
+
+//弹出出入框  参数为弹出框名字 和默认数据
+export function showPrompt(tip,value=""){
+ return ElMessageBox.prompt(tip, {
+    confirmButtonText: '确认',
+    cancelButtonText: '取消',
+    inputValue:value,
+  })
 }
 
 //进度条封装 全屏loading

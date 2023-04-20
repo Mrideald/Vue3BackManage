@@ -7,6 +7,7 @@
         :key="item.id"
         @edit="handleEdit(item)"
         @delete="handleDelete(item.id)"
+        @click="handleChangeActive(item.id)"
       >
         {{ item.name }}
       </AsideList>
@@ -53,7 +54,6 @@ import { toast } from "@/composables/util.js";
 //加载动画
 const loading = ref(false);
 const list = ref([]);
-const activeId = ref(0);
 
 //分页
 const currentPage = ref(1);
@@ -75,8 +75,10 @@ function getData(p = null) {
       list.value = res.list;
       //默认选中第一个
       let item = list.value[0];
+      //将现在活跃的id编程item的id
       if (item) {
-        activeId.value = item.id;
+        //修改id
+        handleChangeActive(item.id)
       }
     })
     .finally(() => {
@@ -167,6 +169,20 @@ const handleDelete=(id)=>{
     loading.value=false
   })
 }
+
+
+//自定义事件
+const emit=defineEmits(['change'])
+
+//切换分类
+const activeId = ref(0);
+const handleChangeActive=(id)=>{
+  //将现有的id改变
+   activeId.value=id
+   //将change事件传到父组件 父组件通知另外一个兄弟组件发请求获取数据
+   emit("change",id)
+}
+
 
 //在header组件调用Aside组件内的方法打开表单 =》暴露方法
 defineExpose({

@@ -6,6 +6,8 @@
 <router-view></router-view>
   </div>
 </template>
+<!--
+//图片渲染以及 修改删除完成 -->
 
 <style>
 body{
