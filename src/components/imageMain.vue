@@ -60,11 +60,22 @@
       />
     </div>
   </el-main>
+  <!-- 上传图片抽屉组件 -->
+  <el-drawer v-model="drawer" title="上传图片">
+    <UploadFile :data="{ image_class_id }" @success="handleUploadSuccess" />
+  </el-drawer>
 </template>
 <script setup>
 import { ref } from "vue";
 import { getImageList, updataImage, deleteImage } from "@/api/image.js";
 import { toast, showPrompt } from "@/composables/util.js";
+import UploadFile from "@/components/UploadFile.vue";
+
+//上传图片
+const drawer = ref(false);
+const openUploadFile = () => {
+  drawer.value = true;
+};
 
 //分页
 const currentPage = ref(1);
@@ -119,18 +130,25 @@ const handleEdit = (item) => {
 };
 
 //删除
-const handleDelete=(id)=>{
-  loading.value=true
-  deleteImage([id]).then((res)=>{
-    toast("删除成功")
-    getData()
-  }).finally(()=>{
-    loading.value=false
-  })
-}
+const handleDelete = (id) => {
+  loading.value = true;
+  deleteImage([id])
+    .then((res) => {
+      toast("删除成功");
+      getData();
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+};
+//上传成功
+const handleUploadSuccess = () => {
+  getData(1);
+};
 
 defineExpose({
   loadData,
+  openUploadFile,
 });
 </script>
 

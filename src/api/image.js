@@ -13,3 +13,5 @@ export function updataImage(id,name){
 export function deleteImage(ids){
   return axios.post('/admin/image/delete_all',{ids})
 }
+//上传图片后端地址
+export const uploadImageAction="/api/admin/image/upload"

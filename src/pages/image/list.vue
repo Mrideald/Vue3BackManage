@@ -2,6 +2,7 @@
     <el-container class="bg-white rounded" :style="{height:h+'px'}">
       <el-header class="image-header">
         <el-button type="primary" size="small" @click="handleOpenClick">新增图片分类</el-button>
+        <el-button type="warning" size="small" @click="handleUpload">上传图片</el-button>
       </el-header>
       <el-container>
         <!-- 主体和侧边抽离 -->
@@ -30,7 +31,10 @@ const handleOpenClick=()=>{
 const handleAsideChange=(image_class_id)=>{
   ImageMainRef.value.loadData(image_class_id)
 }
-
+//上传图片
+const handleUpload=()=>{
+  ImageMainRef.value.openUploadFile()
+}
 </script>
 
 <style>

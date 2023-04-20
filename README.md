@@ -1621,3 +1621,112 @@ prevNode：之前的渲染中代表指令所绑定元素的 VNode。仅在 befor
 
 
 
+
+
+
+
+# 上传图片
+
+用elementui里面的拖拽上传图片
+
+~~~
+<template>
+    <!-- 上传图片需要参数 请求头 后台地址 后台地址写在api中 写了一个常量 请求头是token 动态绑定token 参数body是一个路径名字和图库分类id id需要在aside获取 -->
+    
+  <el-upload
+    drag  //点击上传
+    :action="uploadImageAction"  //后台地址 写在api里面引入
+    multiple  //多文件上传
+    :headers="{  //请求头要为token 因为api里面只写了地址 这边补上请求头
+        token
+    }"
+    name="img"  //上传文件的字段名 默认为file 改为img
+    :data="data"  //上传时带的参数 写一个props在父组件穿过来
+    :on-success="uploadSuccess" //成功和错误的回调
+    :on-error="uploadError"  
+  >
+    <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+    <div class="el-upload__text">
+      把文件拖过来或者 <em>点我上传</em>
+    </div>
+    <template #tip>
+      <div class="el-upload__tip">
+        jpg/png files with a size less than 500kb
+      </div>
+    </template>
+  </el-upload>
+</template>
+
+<script setup>
+import {uploadImageAction} from '@/api/image.js'  //引入后台api
+import {getToken} from '@/composables/auth.js'  //引入获取token
+import {toast} from '@/composables/util.js'  //引入弹窗
+const token=getToken()  //赋值token
+
+//上传 带给服务器的数据为一个对象
+defineProps({
+    data:{
+        type:Object
+    }
+})
+
+//将提交成功的方法返回到父组件
+const emit=defineEmits(["success"])
+
+//示例
+//上传成功 第一个参数是成功后服务器返回的信息 后面也是
+const uploadSuccess=(res)=>{
+    //使用提交成功后的方法 getData获取数据
+   emit("success",{
+    res,uploadFile,uploadFiles
+   })
+}
+//上传失败
+const uploadError=(error)=>{
+   let msg=JSON.parse(error.message).msg||"上传失败"
+   toast(msg,"error")
+}
+</script>
+
+
+父组件内
+<!-- 上传图片抽屉组件 -->
+  <el-drawer v-model="drawer" title="上传图片" >
+    <UploadFile :data={image_class_id} @success="handleUploadSuccess" />
+  </el-drawer>
+  
+  成功的回调
+  //上传成功
+const handleUploadSuccess=()=>{
+  getData(1)
+}
+刷新第一页
+
+
+这边上传成功之后直接放到图片列表里面了 直接展示在页面上面
+~~~
+
+
+
+# 图库组件小结
+
+~~~
+点击图库列表之后展示list.vue页面
+list.vue里面配置layout布局 aside header main三个部分
+
+头部就两个按钮修改 直接写了
+侧边有列表 主体有图片信息 这两个部分拆分成两个组件
+
+
+侧边列表部分
+将每个数据封装成组件数据展示 底部分页器
+每个数据有编辑和删除 编辑的时候有侧边抽屉 封装了组件的 是一个抽屉 
+
+
+主体部分也是 上面用layout布局 四列展示数据 传值过来之后渲染页面
+配有重命名和删除功能 以及上传照片 
+下面分页器
+
+回看思路
+~~~
+
