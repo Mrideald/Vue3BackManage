@@ -13,6 +13,8 @@
       <el-icon :size="12"><Edit /></el-icon>
     </el-button>
     <!-- 气泡确认框 确认删除-->
+    <!-- 包一个span 阻止冒泡事件 -->
+    <span @click.stop="()=>{}">
     <el-popconfirm title="是否要删除该分类?" confirm-button-text="确认"
     cancel-button-text="取消" @confirm="$emit('delete')">
     <!-- confirm确认删除后调用自定义删除事件 -->
@@ -22,6 +24,7 @@
         </el-button>
       </template>
     </el-popconfirm>
+  </span>
   </div>
 </template>
 

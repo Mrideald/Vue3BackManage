@@ -2,7 +2,83 @@
 
 
 
-难点：封装组件 formDrawer 面试前看懂
+## 难点积累
+
+
+
+难点：
+
+### 封装组件 formDrawer 面试前看懂
+
+
+
+###  新增和修改供用一个formDrawer 用id区分这俩
+
+~~~
+<el-button type="primary" size="small" @click="handleCreate">新增</el-button> 新增事件
+<el-button @click="handleEdit(scope.row)">修改</el-button> 修改事件
+
+定义一个中间量const editId=ref(0)
+定义一个区分新增还是修改的标题 const drawerTitle=computed(()=>editId?"修改":"新增")
+
+表单内容
+const form = reactive({
+  title: "",
+  content: "",
+});
+
+新增事件的回调
+//新增公告
+const handleCreate = () => {
+  editId.value = 0; //如果是新增的话 那他就是0
+  form.title = ""; //初始化内容
+  form.content = "";//初始化
+  FormDrawerRef.value.open();//打开表单
+};
+
+修改事件回调
+//修改公告
+const handleEdit = (row) => {
+  editId.value = row.id;//将本行数据的id赋值给edit 用于区分
+  form.title = row.title; //将本行的内容赋值给表单 初始化
+  form.content = row.content;
+  FormDrawerRef.value.open();  //打开表单
+};
+
+提交的回调
+//提交表单 新增和修改公告
+const handleSubmit = () => {
+  formRef.value.validate((valid) => {
+    if (!valid) return; //如果表单内容没写完 直接返回
+    FormDrawerRef.value.showLoading();  //开启加载中
+    //定义一个中间量判别调哪个接口
+    const fun = editId.value   //区分接口
+      ? changeNotice(editId.value, form)
+      : createNotice(form);
+//后续操作
+    fun.then((res) => {
+        //成功的提示
+        toast(drawerTitle.value + "成功");
+        //获取数据 如果是修改的话就获取这一页的数据
+        getData(editId.value ? currentPage.value : 1);
+        //关闭弹框
+        FormDrawerRef.value.close();
+      })
+      .finally(() => {
+        FormDrawerRef.value.hideLoading();
+      });
+  });
+};
+
+总结有三个中间量 第一个是editID 用于区分现在处理的是新增还是修改
+第二个是drawerTitle 区分名字 渲染在表单名称那边 其次是弹框上
+第三个是fun  根据是否有editID区分是哪个接口 如果有这个id 就让fun等于修改的哪个接口 反之则是新增
+
+接口是一个promise对象 确定接口之后使用fun.then finally什么的处理后续操作
+
+~~~
+
+
 
 ## 积累Space
 
@@ -288,6 +364,26 @@ v-slot：用于定义具名插槽，以便在路由组件中传递数据。例�
 ~~~
 
 
+
+### 阻止冒泡事件
+
+~~~
+一个按钮 按钮本身有个点击事件 按钮上面还有个修改或者删除事件 如果我只想删除这个事件但不想触发本身的点击事件 那么就要阻止冒泡事件
+
+在修改或者删除事件名字后面.stop 有些无效的 可以在外面包一个span或者div传一个点击事件 事件回调为一个空对象就可以了
+<!-- 包一个span 阻止冒泡事件 -->
+    <span @click.stop="()=>{}">
+    <el-popconfirm title="是否要删除该分类?" confirm-button-text="确认"
+    cancel-button-text="取消" @confirm="$emit('delete')">
+    <!-- confirm确认删除后调用自定义删除事件 -->
+      <template #reference>
+        <el-button text type="primary" size="small">
+          <el-icon :size="12"><Close /></el-icon>
+        </el-button>
+      </template>
+    </el-popconfirm>
+  </span>
+~~~
 
 
 
@@ -1729,4 +1825,72 @@ list.vue里面配置layout布局 aside header main三个部分
 
 回看思路
 ~~~
+
+
+
+
+
+# 作用域插槽父子组件传值
+
+
+
+插槽一般是父组件在子组件标签内传一些东西 然后子组件用slot接收 
+
+但是有时候我们需要用到子组件的一些值 
+
+使用作用域插槽实例：
+
+~~~
+在子组件接收父组件传来的slot占位内给父组件传
+mycomponent组件内：
+<slot :text="greetingMessage" :count="1"></slot>  类似prop的方式给父组件传值
+使用的话就是
+<MyComponent v-slot="slotProps">  插槽名.数据名称
+  {{ slotProps.text }} {{ slotProps.count }}
+</MyComponent>
+~~~
+
+
+
+按这个理解 -》表格里面
+
+~~~vue
+<!-- 表格 -->   传值给下面的column
+<el-table :data="tableData" stripe style="width: 100%">
+  <el-table-column prop="title" label="公告标题" />
+  <el-table-column prop="create_time" label="发布时间" width="300" />
+  <el-table-column label="操作" width="180" align="center">
+    <template #default="scope"> 
+      <!-- 插槽可以接收到父组件的data值 scope.row就是每一行的tableData -->
+        <h1>{{ scope.row }}</h1> //tableData里面的数据
+      <el-button size="small" text type="primary">修改</el-button>
+
+      <!-- 气泡确认框 确认删除-->
+      <el-popconfirm
+        title="是否要删除该公告?"
+        confirm-button-text="确认"
+        cancel-button-text="取消"
+        @confirm="handleDelete(scope.row.id)"
+      >
+        <!-- confirm确认删除后调用自定义删除事件 -->
+        <template #reference>
+          <el-button size="small" text type="primary">删除</el-button>
+        </template>
+      </el-popconfirm>
+    </template>
+  </el-table-column>
+</el-table>
+~~~
+
+
+
+
+
+# 公告管理小结
+
+思路：卡片 然后顶上是flex布局 下面是一个表格 表格最后一列是自定义内容 自定义内容是个插槽 具体看上面 其次是新增和修改公用一个表单 如何判断问题 写在最顶上难点积累
+
+
+
+
 
