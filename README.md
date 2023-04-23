@@ -8,6 +8,12 @@
 
 难点：
 
+
+
+### 小细节的优化
+
+骨架屏占位 loading加载中
+
 ### 封装组件 formDrawer 面试前看懂
 
 
@@ -383,6 +389,76 @@ v-slot：用于定义具名插槽，以便在路由组件中传递数据。例�
       </template>
     </el-popconfirm>
   </span>
+~~~
+
+
+
+
+
+### encodeURIComponent()
+
+~~~
+encodeURIComponent() 是 JavaScript 中的一个函数，它的作用是将字符串作为 URI 组件进行编码，以便于在 URL 中传递参数时能够被正确解析和识别
+在 URL 中，某些字符（例如空格、中文、特殊字符等）需要进行编码，否则它们将被解析为 URL 的一部分，导致 URL 错误或无法解析。encodeURIComponent() 函数可以将这些需要编码的字符转换成相应的编码值，以便于在 URL 中进行传递和解析。
+
+示例：
+const url = "https://example.com/search?q=" + encodeURIComponent("JavaScript编程");
+// 结果为 https://example.com/search?q=JavaScript%E7%BC%96%E7%A8%8B
+~~~
+
+
+
+### array.join()
+
+~~~
+join() 方法将一个数组（或一个类数组对象）的所有元素连接成一个字符串并返回这个字符串，用逗号或指定的分隔符字符串分隔。如果数组只有一个元素，那么将返回该元素而不使用分隔符。
+
+const elements = ['Fire', 'Air', 'Water'];
+
+console.log(elements.join());
+// Expected output: "Fire,Air,Water"
+
+语法：
+join()
+join(separator) 其中separator是指定一个参数来分隔数组内容 取代之前默认的逗号
+~~~
+
+
+
+### array.map()
+
+给数组添加属性 或者是按自己的意愿修改数组的数据
+
+> **map()** 方法创建一个新数组，这个新数组由原数组中的每个元素都调用一次提供的函数后的返回值组成。
+
+~~~
+const array1 = [1, 4, 9, 16];
+
+// Pass a function to map
+const map1 = array1.map(x => x * 2);  //将里面的元素全部乘以二然后返回数组
+
+console.log(map1);
+// Expected output: Array [2, 8, 18, 32]
+
+
+第二种数组里面都是对象的 可以给对象添加属性 其他的属性不会改变
+const arr=[{a:1},{b:2},{c:3}]
+const arr2=arr.map((o)=>{o.add=false; return o;})
+console.log(arr2,'arr2');
+
+0: {a: 1, add: false}
+1: {b: 2, add: false}
+2: {c: 3, add: false}
+
+也可以查找出指定key的value形成数组
+var users = [
+      { name: '熊大', email: 'zhang@email.com' },
+      { name: '熊二', email: 'jiang@email.com' },
+      { name: '光头强', email: 'li@email.com' }
+    ];
+// emails => email的数组
+var emails = users.map(user => user.email);
+//["zhang@email.com", "jiang@email.com", "li@email.com"]
 ~~~
 
 
@@ -1889,6 +1965,59 @@ mycomponent组件内：
 # 公告管理小结
 
 思路：卡片 然后顶上是flex布局 下面是一个表格 表格最后一列是自定义内容 自定义内容是个插槽 具体看上面 其次是新增和修改公用一个表单 如何判断问题 写在最顶上难点积累
+
+
+
+# 获取管理员列表的请求处理
+
+~~~js
+//获取管理员列表 传入参数是limit 和keyword 页面限制大小 和名称
+export function getManagerList(page,query={}){
+   let q=[]  //空数组接收处理后的key=value
+   for(const key in query){
+      if(query[key]){
+         //将limit=对应的值推入到q里面 还有key
+         q.push(`${key}=${encodeURIComponent(query[key])}`)//将数据推入q 并处理encode
+      }
+   }
+   let r=q.join("&")  //将q里面的内容拼接成字符串 并且用&连接limit=10&keyword=ceshi
+   r=r?("?"+r):""  //在字符串前面加个问号 params参数特性？a=*** 其实可以在下面地址直接写？
+   return axios.get(`/manager/${page}${r}`)
+}
+~~~
+
+
+
+
+
+# 关于table中插槽的问题
+
+~~~vue
+如果要显示的数据是绑定的data里面的数据 展示的时候在table-column里面用prop=“”绑定即可
+如果显示的数据是自定义的 也是根据data里面的数据渲染的 就需要像下面这样写插槽内容
+<el-table :data="list" stripe style="width: 100%" v-loading="loading">
+<!-- 头像部分 -->
+<el-table-column label="管理员" width="200px">
+<!-- 结构出当前的对象 本来的形式是默认插槽是scope 当前对象是scope.row -->
+<template #default="{ row }">
+<div class="flex items-center">
+<!-- 头像 -->
+<el-avatar :size="60" :src="row.avatar">
+<!-- 失败的话显示下面这个 -->
+<img
+src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png"
+/>
+</el-avatar>
+<!-- 右边部分 -->
+<div class="ml-3">
+<h6>{{ row.username }}</h6>
+<small>ID:{{ row.id }}</small>
+</div>
+</div>
+</template>
+</el-table-column>
+</el-table>
+~~~
 
 
 

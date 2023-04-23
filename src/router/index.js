@@ -13,6 +13,7 @@ const ImageList = () => import("@/pages/image/list.vue");
 const NoticeList = () => import("@/pages/notice/list.vue");
 const SettingBase = () => import("@/pages/setting/base.vue");
 const CouponList=()=>import("@/pages/coupon/list.vue")
+const ManagerList=()=>import('@/pages/manager/list.vue')
 //默认路由 所有路由共享
 const routes = [
   {
@@ -110,6 +111,14 @@ const asyncRoutes = [
     component: CouponList,
     meta: {
       title: "优惠券列表",
+    },
+  },
+  {
+    path: "/manager/list",
+    name: "/manager/list",
+    component: ManagerList,
+    meta: {
+      title: "管理员管理",
     },
   },
 ];
