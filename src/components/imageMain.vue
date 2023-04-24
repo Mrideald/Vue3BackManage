@@ -13,6 +13,7 @@
             shadow="hover"
             class="relative mb-3"
             :body-style="{ padding: 0 }"
+            :class="{'border-green-500':item.checked}"
           >
             <el-image
               :src="item.url"
@@ -25,11 +26,15 @@
             </el-image>
             <div class="image_title">{{ item.name }}</div>
             <div class="flex justify-center items-center p-2">
+              <!-- 复选框 -->
+              <el-checkbox v-if="openChoose" v-model="item.checked" @change="handleChooseChange(item)"/>
+              <!-- 重命名 -->
               <el-button
                 type="primary"
                 size="small"
                 text
                 @click="handleEdit(item)"
+                class="!m-0"
                 >重命名</el-button
               >
               <!-- 气泡确认框 确认删除-->
@@ -66,7 +71,7 @@
   </el-drawer>
 </template>
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { getImageList, updataImage, deleteImage } from "@/api/image.js";
 import { toast, showPrompt } from "@/composables/util.js";
 import UploadFile from "@/components/UploadFile.vue";
@@ -76,6 +81,13 @@ const drawer = ref(false);
 const openUploadFile = () => {
   drawer.value = true;
 };
+
+defineProps({
+  openChoose:{
+    type:Boolean,
+    default:false
+  }
+})
 
 //分页
 const currentPage = ref(1);
@@ -98,7 +110,8 @@ function getData(p = null) {
     .then((res) => {
       //返回的数据装到指定的变量中
       total.value = res.totalCount;
-      list.value = res.list;
+      // 存储数据并复选框的check属性
+      list.value = res.list.map(o=>{o.checked=false;return o;});
     })
     .finally(() => {
       //加载关闭
@@ -145,6 +158,19 @@ const handleDelete = (id) => {
 const handleUploadSuccess = () => {
   getData(1);
 };
+
+// 选中照片后通知父组件
+const emit=defineEmits(["choose"])
+//选中图片
+// 只能选一张照片 这里计算一下有多少张选中了
+const checkedImage=computed(()=>list.value.filter(o=>o.checked))
+const handleChooseChange=(item)=>{
+ if(item.checked &&checkedImage.value.length>1){
+  item.checked=false
+  return toast("最多只能选中1张照片","error")
+ }
+ emit("choose",checkedImage.value)
+}
 
 defineExpose({
   loadData,

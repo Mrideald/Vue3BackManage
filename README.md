@@ -2021,5 +2021,66 @@ src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png"
 
 
 
+# vue3中父子组件数据的双向绑定问题
 
+[官方文档解释](https://cn.vuejs.org/guide/components/v-model.html#handling-v-model-modifiers)
+
+~~~
+<input v-model="searchText" />这是在原生元素上的用法
+
+而当使用在一个组件上时，v-model 会被展开为如下的形式：
+<CustomInput
+  :modelValue="searchText"  //可以写成v-model="searchText"
+  @update:modelValue="newValue => searchText = newValue"
+/>
+
+要让这个例子实际工作起来，<CustomInput> 组件内部需要做两件事：
+1.将内部原生 <input> 元素的 value attribute 绑定到 modelValue prop
+2.当原生的 input 事件触发时，触发一个携带了新值的 update:modelValue 自定义事件
+
+<!-- CustomInput.vue -->
+<script setup>
+defineProps(['modelValue'])
+defineEmits(['update:modelValue'])
+</script>
+
+<template>
+  <input
+    :value="modelValue"
+    @input="$emit('update:modelValue', $event.target.value)"
+  />
+</template>
+
+~~~
+
+思路：在父组件中将数据用v-model和子组件连接 子组件内用props接收 然后使用emit将数据连接上父组件
+
+
+
+实际例子：
+
+~~~
+父组件内： :modelValue="form.avatar"  //可以写成v-model="form.avatar"
+<ChooseImage v-model="form.avatar"/>
+
+子组件内：
+//接收传来的值 名字得是modelValue
+const prop=defineProps({
+ modelValue:[String,Array]
+})
+
+//绑定自定义事件 给父组件传递数据更新
+const emit=defineEmits(["update:modelValue"])
+
+const submit=()=>{
+  //确定之后调用数据更新事件
+  if(urls.length){
+    // 将新的值传给父组件 实现双向链接
+    emit("update:modelValue",urls[0])
+  }
+  close()
+}
+
+修改urls[0]后就可以修改数据了
+~~~
 

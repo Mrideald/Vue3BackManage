@@ -38,3 +38,18 @@ export function getManagerList(page,query={}){
 export function updataManagerStatus(id,status){
    axios.post(`/admin/manager/${id}/update_status`,{status})
 }
+
+//增加管理员 body参数 username password roleid status avatar
+export function createManager(data){
+   axios.post("/admin/manager",data)
+}
+
+//修改管理员 body参数 username password roleid status avatar
+export function updataManager(id,data){
+  axios.post(`/admin/manager/${id}`,data)
+}
+
+//删除管理员
+export function deleteManager(id){
+  axios.post(`/admin/manager/${id}/delete`)
+}
