@@ -8,7 +8,7 @@
 
 难点：
 
-
+对项目的优化 比如复用代码的封装 公告模块和管理员模块
 
 ### 小细节的优化
 
@@ -2084,3 +2084,137 @@ const submit=()=>{
 修改urls[0]后就可以修改数据了
 ~~~
 
+
+
+
+
+# 封装搜索，获取数据 分页功能
+
+
+
+~~~js
+// 搜索和列表分页 获取数据 内容  useCommon.js
+import { reactive, ref } from "vue";
+//
+export function useInitTable(opt = {}) {
+let searchForm=null  //接收传来的数据  搜索内容 这个也作为getdata的参数去发请求
+let resetSearchForm=null  //重置表单 默认定义一下
+//如果有传来搜索表单内容 返回一个搜索内容和重置表单
+if(opt.searchForm){
+    //解构传来的数据 比如{keyword:""}  用reactive接收 变成响应式
+    searchForm=reactive({...opt.searchForm})
+
+    //重置表单
+    resetSearchForm=()=>{
+        // 遍历searchForm的key
+        for(const key in opt.searchForm){
+            // 传来的数据都是默认的空 或者值 重置的直接遍历之后让他等于传来的即可
+            searchForm[key]=opt.searchForm[key]
+        }
+        getData()
+    }
+
+}
+
+
+
+  const loading = ref(false);  //加载中
+  //分页
+  const currentPage = ref(1);  //当前页
+  const total = ref(0); //总共几条
+  const limit = ref(10);  //限制
+  const list = ref([]);  //列表
+
+  // 获取数据
+  function getData(p = null) {
+    // 获取数据的方法
+    if (typeof p == "number") {
+      currentPage.value = p;
+    }
+    loading.value = true;
+    // 两个组件获取数据的接口不一样 用getlist替代接口 在外面传数据过来
+    opt
+      .getList(currentPage.value, searchForm)
+      .then((res) => {
+        // 如果外面配置了回调函数 就使用外面的 没有的话就执行默认的else
+        if (opt.onGetListSuccess && typeof opt.onGetListSuccess == "function") {
+          opt.onGetListSuccess(res); //把成功的回调拿回去
+        } else {
+          list.value = res.list;
+          total.value = res.totalCount;
+        }
+      })
+      //最后
+      .finally(() => {
+        loading.value = false;
+      });
+  }
+  getData();
+
+  return {
+    searchForm,  //接收关键词
+    resetSearchForm,  //接收重置
+    list,  //列表
+    loading,  //加载中
+    currentPage, //当前页
+    total,
+    limit,
+    getData,//获取数据
+  };
+}
+
+~~~
+
+
+
+使用实例:
+
+~~~js
+// 引入封装组件
+import { useInitTable } from "../../composables/useCommon";
+const roles = ref([]);
+// 使用封装组件
+const {
+  searchForm,
+  resetSearchForm,
+  list,
+  loading,
+  currentPage,
+  total,
+  limit,
+  getData,//引入组件内容  有些是需要使用的就引入 不需要的就不引入 比如搜索功能不要就不引入
+} = useInitTable({ //参数为一个对象 以下是对象内容 传给封装组件
+  searchForm:{keyword:""},//搜索表单内容 传给封装组件
+  getList: getManagerList,//表单获取数据的方法 传给封装组件
+  //请求后.then执行内容 没有写这个就是执行那边默认的内容
+  onGetListSuccess: (res) => {
+    //给list添加一个statusloading属性 加载中 其实可以用不到 因为下面返回的是函数不是promise对象 函数一下就执行了 显示不出加载中
+      list.value = res.list.map((o) => {
+        o.statusLoading = false;
+        return o;
+      });
+      total.value = res.totalCount;
+      roles.value = res.roles;
+  },
+});
+~~~
+
+截取了部分 更多内容看代码 如果还有别的封装 也在里面写
+
+
+
+# 管理员模块小结
+
+这边请求的.then都出问题了 用定时器替代了一下
+
+这个模块和公告管理相似，都有增删改（查）功能 所以把这些功能进行了封装供俩个组件一起使用 
+
+运用组合式api的特性 引入封装组件的返回的函数或者变量进行使用 
+
+其中难点在于传图片部分 如何在组件之间双向绑定 点击上传图片后引入图库组件 封装头像部分内容
+
+表单头像内容和图库组件双向绑定 选取图片上传 上传是根据我单选框选好图片之后 点击确定 确定绑定自定义事件的双向绑定 将图片的url传到父组件进行展示
+
+
+
+ 

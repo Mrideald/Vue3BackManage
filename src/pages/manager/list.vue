@@ -1,12 +1,12 @@
 <template>
   <el-card shadow="never" class="border-0">
     <!-- 搜索 -->
-    <el-form :model="searchFrom" label-width="80px" class="mb-3" size="small">
+    <el-form :model="searchForm" label-width="80px" class="mb-3" size="small">
       <el-row :gutter="20">
         <el-col :span="8" :offset="0">
           <el-form-item label="关键词">
             <el-input
-              v-model="searchFrom.keyword"
+              v-model="searchForm.keyword"
               placeholder="管理员昵称"
               clearable
             ></el-input>
@@ -181,151 +181,88 @@ import {
 } from "@/api/manager.js";
 import FormDrawer from "@/components/FormDrawer.vue";
 import ChooseImage from "@/components/chooseImage.vue";
-import { toast } from "@/composables/util.js";
-
-//搜索管理员关键词
-const searchFrom = reactive({
-  keyword: "",
-});
-//重置管理数据
-const resetSearchForm = () => {
-  searchFrom.keyword = "";
-  getData();
-};
-
-const loading = ref(false);
-//分页
-const currentPage = ref(1);
-const total = ref(0);
-const limit = ref(10);
-const list = ref([]);
+// 引入封装组件
+import { useInitTable, useInitForm } from "../../composables/useCommon";
 const roles = ref([]);
-
-// 获取数据
-function getData(p = null) {
-  if (typeof p == "number") {
-    currentPage.value = p;
-  }
-  loading.value = true;
-  getManagerList(currentPage.value, { limit: 10, keyword: searchFrom.keyword })
-    .then((res) => {
-      //给list添加一个statusloading属性 加载中 其实可以用不到 因为下面返回的是函数不是promise对象 函数一下就执行了 显示不出加载中
-      list.value = res.list.map((o) => {
-        o.statusLoading = false;
-        return o;
-      });
-      total.value = res.totalCount;
-      roles.value = res.roles;
-    })
-    .finally(() => {
-      loading.value = false;
+// 使用封装组件 分页器 获取数据 搜索内容 删除 修改状态
+const {
+  searchForm,
+  resetSearchForm,
+  list,
+  loading,
+  currentPage,
+  total,
+  limit,
+  getData,
+  handleStatusChange,
+  handleDelete,
+} = useInitTable({
+  searchForm: { keyword: "" },
+  getList: getManagerList,
+  onGetListSuccess: (res) => {
+    //给list添加一个statusloading属性 加载中 其实可以用不到 因为下面返回的是函数不是promise对象 函数一下就执行了 显示不出加载中
+    list.value = res.list.map((o) => {
+      o.statusLoading = false;
+      return o;
     });
-}
-getData();
-
-//删除管理员
-const handleDelete = (id) => {
-  deleteManager(id);
-  //接口问题 .then不管用
-  setTimeout(() => {
-    toast("删除成功");
-    getData();
-  }, 1000);
-};
-
-//表单部分
-const FormDrawerRef = ref(null);
-const formRef = ref(null);
-const form = reactive({
-  username: "",
-  password: "",
-  role_id: null,
-  status: 1,
-  avatar: "",
+    total.value = res.totalCount;
+    roles.value = res.roles;
+  },
+  delete:deleteManager,
+  updataStatus:updataManagerStatus,
 });
-const rules = {
-  username: [
-    {
-      required: true,
-      message: "用户名不能为空",
-      trigger: "blur",
-    },
-  ],
-  password: [
-    {
-      required: true,
-      message: "密码不能为空",
-      trigger: "blur",
-    },
-  ],
-  status: [
-    {
-      required: true,
-      message: "状态不能为空",
-      trigger: "blur",
-    },
-  ],
-  role_id: [
-    {
-      required: true,
-      message: "id不能为空",
-      trigger: "blur",
-    },
-  ],
-};
-//新增和修改公用一个表单组件 用一个id区分
-const editId = ref(null);
-//要获取到还要写.value
-const drawerTitle = computed(() => (editId.value ? "修改" : "新增"));
-//提交表单 新增和修改公告
-const handleSubmit = () => {
-  formRef.value.validate((valid) => {
-    if (!valid) return;
-    FormDrawerRef.value.showLoading();
-    //定义一个中间量判别调哪个接口
-    editId.value ? updataManager(editId.value, form) : createManager(form);
-    //后续操作 promise.then不管用
-    setTimeout(() => {
-      //成功的提示
-      toast(drawerTitle.value + "成功");
-      //获取数据 如果是修改的话就获取这一页的数据
-      getData(editId.value ? currentPage.value : 1);
-      //关闭加载
-      FormDrawerRef.value.hideLoading();
-      //关闭弹框
-      FormDrawerRef.value.close();
-    }, 1000);
-  });
-};
 
-//修改管理员
-const handleEdit = (row) => {
-  editId.value = row.id;
-  form.username = row.username;
-  form.password = row.password;
-  (form.role_id = row.role_id),
-    (form.status = row.status),
-    (form.avatar = row.avatar),
-    FormDrawerRef.value.open();
-};
-
-//新增管理员
-const handleCreate = () => {
-  editId.value = 0;
-  (form.username = ""),
-    (form.password = ""),
-    (form.role_id = null),
-    (form.status = 1),
-    (form.avatar = ""),
-    FormDrawerRef.value.open();
-};
-
-//修改状态
-const handleStatusChange = async (status, row) => {
-  row.statusLoading = true; //加载中开启
-  await updataManagerStatus(row.id, status);
-  toast("修改状态成功");
-  row.status = status;
-  row.statusLoading = false; //加载中关闭
-};
+// 新增和修改内容
+const {
+  FormDrawerRef,
+  formRef,
+  form,
+  rules,
+  drawerTitle,
+  handleSubmit,
+  handleEdit,
+  handleCreate,
+} = useInitForm({
+  // 传参~
+  form: {
+    username: "",
+    password: "",
+    role_id: null,
+    status: 1,
+    avatar: "",
+  },
+  rules:{
+    username: [
+      {
+        required: true,
+        message: "用户名不能为空",
+        trigger: "blur",
+      },
+    ],
+    password: [
+      {
+        required: true,
+        message: "密码不能为空",
+        trigger: "blur",
+      },
+    ],
+    status: [
+      {
+        required: true,
+        message: "状态不能为空",
+        trigger: "blur",
+      },
+    ],
+    role_id: [
+      {
+        required: true,
+        message: "id不能为空",
+        trigger: "blur",
+      },
+    ],
+  },
+  getData,
+  update: updataManager,
+  create: createManager,
+});
 </script>

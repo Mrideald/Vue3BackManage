@@ -80,7 +80,6 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from "vue";
 import {
   getNoticeList,
   createNotice,
@@ -88,108 +87,49 @@ import {
   deleteNotice,
 } from "@/api/notice.js";
 import FormDrawer from "@/components/FormDrawer.vue";
-import { toast } from "@/composables/util.js";
+import { useInitTable } from "@/composables/useCommon.js";
 
-const loading = ref(false);
-//分页
-const currentPage = ref(1);
-const total = ref(0);
-const limit = ref(10);
-const list = ref([]);
-
-function getData(p = null) {
-  if (typeof p == "number") {
-    currentPage.value = p;
-  }
-  loading.value = true;
-  getNoticeList(currentPage.value)
-    .then((res) => {
-      list.value = res.list;
-      total.value = res.totalCount;
-    })
-    .finally(() => {
-      loading.value = false;
-    });
-}
-getData();
-
-//删除公告
-const handleDelete = (id) => {
-  loading.value = true;
-  deleteNotice(id)
-    .then((res) => {
-      toast("删除成功");
-      getData();
-    })
-    .finally(() => {
-      loading.value = false;
-    });
-};
-
-//表单部分
-const FormDrawerRef = ref(null);
-const formRef = ref(null);
-const form = reactive({
-  title: "",
-  content: "",
-});
-const rules = {
-  title: [
-    {
-      required: true,
-      message: "公告的标题不能为空",
-      trigger: "blur",
-    },
-  ],
-  content: [
-    {
-      required: true,
-      message: "公告的内容不能为空",
-      trigger: "blur",
-    },
-  ],
-};
-//新增和修改公用一个表单组件 用一个id区分
-const editId = ref(0);
-//要获取到还要写.value
-const drawerTitle = computed(() => editId.value ? "修改" : "新增");
-//提交表单 新增和修改公告
-const handleSubmit = () => {
-  formRef.value.validate((valid) => {
-    if (!valid) return;
-    FormDrawerRef.value.showLoading();
-    //定义一个中间量判别调哪个接口
-    const fun = editId.value
-      ? changeNotice(editId.value, form)
-      : createNotice(form);
-//后续操作
-    fun.then((res) => {
-        //成功的提示
-        toast(drawerTitle.value + "成功");
-        //获取数据 如果是修改的话就获取这一页的数据
-        getData(editId.value ? currentPage.value : 1);
-        //关闭弹框
-        FormDrawerRef.value.close();
-      })
-      .finally(() => {
-        FormDrawerRef.value.hideLoading();
-      });
+// 使用封装组件 分页器 获取数据 删除
+const { list, loading, currentPage, total, limit, getData, handleDelete } =
+  useInitTable({
+    getList: getNoticeList,
+    delete: deleteNotice,
   });
-};
-
-//修改公告
-const handleEdit = (row) => {
-  editId.value = row.id;
-  form.title = row.title;
-  form.content = row.content;
-  FormDrawerRef.value.open();
-};
-
-//新增公告
-const handleCreate = () => {
-  editId.value = 0;
-  form.title = "";
-  form.content = "";
-  FormDrawerRef.value.open();
-};
+//新增和修改
+// 新增和修改内容
+const {
+  FormDrawerRef,
+  formRef,
+  form,
+  rules,
+  drawerTitle,
+  handleSubmit,
+  handleEdit,
+  handleCreate,
+} = useInitForm({
+  // 传参~
+  form: {
+    title: "",
+    content: "",
+  },
+  rules: {
+    title: [
+      {
+        required: true,
+        message: "公告的标题不能为空",
+        trigger: "blur",
+      },
+    ],
+    content: [
+      {
+        required: true,
+        message: "公告的内容不能为空",
+        trigger: "blur",
+      },
+    ],
+  },
+  getData,
+  update: changeNotice,
+  create: createNotice,
+});
 </script>

@@ -21,7 +21,7 @@
         <!-- 主体和侧边抽离 -->
         <ImageAside ref="ImageAsideRef" @change="handleAsideChange"/>
         <ImageMain :openChoose="true" ref="ImageMainRef" @choose="handleChoose"/>
-      </el-container>
+      </el-container> 
     </el-container>
     <template #footer>
       <span>
