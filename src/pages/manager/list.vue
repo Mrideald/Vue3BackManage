@@ -23,16 +23,7 @@
     </el-form>
 
     <!-- 新增和刷新 -->
-    <div class="flex items-center justify-between mb-4">
-      <el-button type="primary" size="small" @click="handleCreate"
-        >新增</el-button
-      >
-      <el-tooltip effect="dark" content="刷新数据" placement="top">
-        <el-button text @click="getData">
-          <el-icon :size="20"><Refresh /></el-icon>
-        </el-button>
-      </el-tooltip>
-    </div>
+    <ListHeader @create="handleCreate" @refresh="getData"/>
 
     <!-- 表格 -->
     <el-table :data="list" stripe style="width: 100%" v-loading="loading">
@@ -97,7 +88,7 @@
             >
             <!-- 气泡确认框 确认删除-->
             <el-popconfirm
-              title="是否要删除该公告?"
+              title="是否要删除该管理员?"
               confirm-button-text="确认"
               cancel-button-text="取消"
               @confirm="handleDelete(scope.row.id)"
@@ -171,7 +162,7 @@
 </template>
 <!-- .then一直报错 用定时器取代了异步操作   8.5 -->
 <script setup>
-import { computed, reactive, ref } from "vue";
+import { ref } from "vue";
 import {
   getManagerList,
   updataManagerStatus,
@@ -181,6 +172,7 @@ import {
 } from "@/api/manager.js";
 import FormDrawer from "@/components/FormDrawer.vue";
 import ChooseImage from "@/components/chooseImage.vue";
+import ListHeader from '@/components/ListHeader.vue'
 // 引入封装组件
 import { useInitTable, useInitForm } from "../../composables/useCommon";
 const roles = ref([]);

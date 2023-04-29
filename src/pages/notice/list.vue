@@ -1,16 +1,7 @@
 <template>
   <el-card shadow="never" class="border-0">
     <!-- 新增和刷新 -->
-    <div class="flex items-center justify-between mb-4">
-      <el-button type="primary" size="small" @click="handleCreate"
-        >新增</el-button
-      >
-      <el-tooltip effect="dark" content="刷新数据" placement="top">
-        <el-button text @click="getData">
-          <el-icon :size="20"><Refresh /></el-icon>
-        </el-button>
-      </el-tooltip>
-    </div>
+    <ListHeader @create="handleCreate" @refresh="getData" />
 
     <!-- 表格 -->
     <el-table :data="list" stripe style="width: 100%" v-loading="loading">
@@ -87,7 +78,8 @@ import {
   deleteNotice,
 } from "@/api/notice.js";
 import FormDrawer from "@/components/FormDrawer.vue";
-import { useInitTable } from "@/composables/useCommon.js";
+import { useInitTable, useInitForm } from "@/composables/useCommon.js";
+import ListHeader from "../../components/ListHeader.vue";
 
 // 使用封装组件 分页器 获取数据 删除
 const { list, loading, currentPage, total, limit, getData, handleDelete } =

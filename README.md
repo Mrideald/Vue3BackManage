@@ -4,11 +4,13 @@
 
 ## 难点积累
 
-
+封装内容：列表的增删改查逻辑 新增和刷新组件
 
 难点：
 
 对项目的优化 比如复用代码的封装 公告模块和管理员模块
+
+
 
 ### 小细节的优化
 
@@ -459,6 +461,21 @@ var users = [
 // emails => email的数组
 var emails = users.map(user => user.email);
 //["zhang@email.com", "jiang@email.com", "li@email.com"]
+~~~
+
+
+
+### 父标签定义flex布局 将任意子标签推到最右边
+
+在父标签设置了 `display: flex` 后，子标签可以通过设置 `margin-left: auto` 来将其推到最右边。
+
+这是因为 `margin-left: auto` 可以将子元素的左侧外边距扩展到可用空间的最大值，从而使子元素靠近容器的右侧。在 `display: flex` 布局中，未被占据的空间会自动分配给子元素，因此设置 `margin-left: auto` 可以使子元素填充未占据的空间并推到最右边。
+
+~~~
+<div style="display: flex;">
+  <div>左侧元素</div>
+  <div style="margin-left: auto;">右侧元素</div>
+</div>
 ~~~
 
 
@@ -2217,4 +2234,11 @@ const {
 
 
 
- 
+ # 权限管理小结
+
+
+
+~~~
+这边没什么可说的 页面用el-tree组件编写 ，这个组件很多属性还是很陌生 可以重温 其他功能均使用增删改查的封装 整个编写很顺利 全是用封装的组件写起来很快
+~~~
+

@@ -14,6 +14,8 @@ const NoticeList = () => import("@/pages/notice/list.vue");
 const SettingBase = () => import("@/pages/setting/base.vue");
 const CouponList=()=>import("@/pages/coupon/list.vue")
 const ManagerList=()=>import('@/pages/manager/list.vue')
+const AccessList=()=>import('@/pages/access/list.vue')
+const RoleList=()=>import('@/pages/role/list.vue')
 //默认路由 所有路由共享
 const routes = [
   {
@@ -121,6 +123,14 @@ const asyncRoutes = [
       title: "管理员管理",
     },
   },
+  {
+    path: "/access/list",
+    name: "/access/list",
+    component: AccessList,
+    meta: {
+      title: "菜单权限管理",
+    },
+  }
 ];
 //动态添加路由  递归
 export function addRoutes(menus) {
