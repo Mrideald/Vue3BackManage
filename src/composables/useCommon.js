@@ -73,6 +73,30 @@ export function useInitTable(opt = {}) {
     }, 1000);
   };
 
+  //多选选中id
+const multiSelectionIds = ref([]);
+const handleSelectionChange = (e) => {
+  // 拿到选中的每一个的id组成数组
+  multiSelectionIds.value = e.map((o) => o.id);
+};
+
+  //批量删除
+const multipleTableRef=ref(null)
+const handleMultDelete = () => {
+  loading.value = true;
+  opt.delete(multiSelectionIds.value)
+    .then((res) => {
+      toast("删除成功")
+      if(multipleTableRef.value){
+        multipleTableRef.value.clearSelection()
+      }
+      getData()
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+};
+
   return {
     searchForm, //接收关键词
     resetSearchForm, //接收重置
@@ -84,6 +108,9 @@ export function useInitTable(opt = {}) {
     getData, //获取数据
     handleStatusChange, //修改状态
     handleDelete, //删除
+    handleSelectionChange,//多选id
+    multipleTableRef,//表格节点获取
+    handleMultDelete//多选删除
   };
 }
 
