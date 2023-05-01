@@ -130,6 +130,14 @@ const asyncRoutes = [
     meta: {
       title: "菜单权限管理",
     },
+  },
+  {
+    path: "/role/list",
+    name: "/role/list",
+    component: RoleList,
+    meta: {
+      title: "角色管理",
+    },
   }
 ];
 //动态添加路由  递归

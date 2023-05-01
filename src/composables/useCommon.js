@@ -54,6 +54,7 @@ export function useInitTable(opt = {}) {
 
   //修改状态
   const handleStatusChange = async (status, row) => {
+    console.log(status,row,'status,row');
     row.statusLoading = true; //加载中开启
     await opt.updataStatus(row.id, status);
     toast("修改状态成功");
