@@ -131,8 +131,18 @@ export function useInitForm(opt = {}) {
     formRef.value.validate((valid) => {
       if (!valid) return;
       FormDrawerRef.value.showLoading();
+
+     //提交之前 对form进行一些操作
+     let body={}
+     if(opt.beforeSubmit && typeof opt.beforeSubmit=="function"){
+      body=opt.beforeSubmit({...form})
+     }else {
+      body=form
+     }
+
+
       //定义一个中间量判别调哪个接口
-      editId.value ? opt.update(editId.value, form) : opt.create(form);
+      editId.value ? opt.update(editId.value, body) : opt.create(body);
       //后续操作 promise.then不管用
       setTimeout(() => {
         //成功的提示

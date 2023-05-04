@@ -2251,3 +2251,78 @@ const {
 # 规格管理开发 
 
 和角色管理大致一样 使用封装内容快速渲染 ，新增多选删除 多个选中内容 ，封装到common中了,都是用的element uizh
+
+
+
+# 优惠券部分
+
+发放状态补充
+
+~~~
+给返回的数据添加属性statusText
+onGetListSuccess: (res) => {
+list.value = res.list.map((o) => {
+  //转化优惠券状态 使用下面的函数 返回值为当前状态
+  o.statusText = formatStatus(o);
+  return o;
+});
+total.value = res.totalCount;
+},
+
+函数：
+function formatStatus(row) {
+  let s = "领取中";  //默认是领取中
+  //开始时间 时间都转化为时间戳形式
+  let start_time = new Date(row.start_time).getTime();
+  //时间
+  let now = new Date().getTime();
+  //结束时间 
+  let end_time = new Date(row.end_time).getTime();
+  if (start_time > now) {
+    s = "未开始";
+  } else if (end_time < now) {
+    s = "已结束";
+  } else if (row.status == 0) {
+    s = "已失效";
+  }
+  return s;
+}
+~~~
+
+
+
+第二个问题 新增的时候选择时间 返回的不是时间戳形式 要等接收到数据之后转化成时间戳形式
+
+解决:
+
+在封装的common组件中
+
+添加对表单内容的操作
+
+*//提交之前 对form进行一些操作*
+
+~~~
+//提交之前 对form进行一些操作
+let body={}
+//如果在组件内给当前封装组件返回了这个函数 那么就使用这个函数的内容 将表单内容传给函数
+if(opt.beforeSubmit && typeof opt.beforeSubmit=="function"){
+body=opt.beforeSubmit({...form})//把表单数据解构给函数当参数
+}else {
+body=form  //反之不处理表单 后面发请求传数据的时候就发送form
+}
+
+传来的函数
+beforeSubmit: (f) => {
+if (typeof f.start_time != "number") {
+  f.start_time = new Date(f.start_time).getTime(); //转化成时间戳
+}
+if (typeof f.end_time != "number") {
+  f.end_time = new Date(f.end_time).getTime();//转化成时间戳
+}
+return f;
+},
+~~~
+
+
+
+其他内容大致差不多 就是写表格
