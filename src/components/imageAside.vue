@@ -39,7 +39,6 @@
     </el-form>
   </FormDrawer>
 </template>
-<!-- 6.8-->
 <script setup>
 import { computed, reactive, ref } from "vue";
 import AsideList from "./asideList.vue";

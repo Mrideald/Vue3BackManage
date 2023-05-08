@@ -13,7 +13,7 @@
             shadow="hover"
             class="relative mb-3"
             :body-style="{ padding: 0 }"
-            :class="{'border-green-500':item.checked}"
+            :class="{ 'border-green-500': item.checked }"
           >
             <el-image
               :src="item.url"
@@ -27,7 +27,11 @@
             <div class="image_title">{{ item.name }}</div>
             <div class="flex justify-center items-center p-2">
               <!-- 复选框 -->
-              <el-checkbox v-if="openChoose" v-model="item.checked" @change="handleChooseChange(item)"/>
+              <el-checkbox
+                v-if="openChoose"
+                v-model="item.checked"
+                @change="handleChooseChange(item)"
+              />
               <!-- 重命名 -->
               <el-button
                 type="primary"
@@ -82,12 +86,16 @@ const openUploadFile = () => {
   drawer.value = true;
 };
 
-defineProps({
-  openChoose:{
-    type:Boolean,
-    default:false
-  }
-})
+const props = defineProps({
+  openChoose: {
+    type: Boolean,
+    default: false,
+  },
+  limit: {
+    type: Number,
+    default: 1,
+  },
+});
 
 //分页
 const currentPage = ref(1);
@@ -111,7 +119,10 @@ function getData(p = null) {
       //返回的数据装到指定的变量中
       total.value = res.totalCount;
       // 存储数据并复选框的check属性
-      list.value = res.list.map(o=>{o.checked=false;return o;});
+      list.value = res.list.map((o) => {
+        o.checked = false;
+        return o;
+      });
     })
     .finally(() => {
       //加载关闭
@@ -160,17 +171,17 @@ const handleUploadSuccess = () => {
 };
 
 // 选中照片后通知父组件
-const emit=defineEmits(["choose"])
+const emit = defineEmits(["choose"]);
 //选中图片
 // 只能选一张照片 这里计算一下有多少张选中了
-const checkedImage=computed(()=>list.value.filter(o=>o.checked))
-const handleChooseChange=(item)=>{
- if(item.checked &&checkedImage.value.length>1){
-  item.checked=false
-  return toast("最多只能选中1张照片","error")
- }
- emit("choose",checkedImage.value)
-}
+const checkedImage = computed(() => list.value.filter((o) => o.checked));
+const handleChooseChange = (item) => {
+  if (item.checked && checkedImage.value.length > props.limit) {
+    item.checked = false;
+    return toast("最多只能选中1张照片", "error");
+  }
+  emit("choose", checkedImage.value);
+};
 
 defineExpose({
   loadData,

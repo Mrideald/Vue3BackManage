@@ -54,7 +54,6 @@ export function useInitTable(opt = {}) {
 
   //修改状态
   const handleStatusChange = async (status, row) => {
-    console.log(status,row,'status,row');
     row.statusLoading = true; //加载中开启
     await opt.updataStatus(row.id, status);
     toast("修改状态成功");
@@ -97,6 +96,23 @@ const handleMultDelete = () => {
     });
 };
 
+//批量修改状态
+const handleMultStatusChange = (status) => {
+  loading.value = true;
+  opt.updataStatus(multiSelectionIds.value,status)
+    .then((res) => {
+      toast("修改状态成功")
+      // 清空选中
+      if(multipleTableRef.value){
+        multipleTableRef.value.clearSelection()
+      }
+      getData()
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+};
+
   return {
     searchForm, //接收关键词
     resetSearchForm, //接收重置
@@ -110,7 +126,8 @@ const handleMultDelete = () => {
     handleDelete, //删除
     handleSelectionChange,//多选id
     multipleTableRef,//表格节点获取
-    handleMultDelete//多选删除
+    handleMultDelete,//多选删除
+    handleMultStatusChange,//修改多个状态
   };
 }
 

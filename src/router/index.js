@@ -157,15 +157,16 @@ export function addRoutes(menus) {
   const findAndAddRoutesByMenus = (arr) => {
     //foreach获取到数组里的每一项
     arr.forEach((e) => {
-      //找到满足条件的第一项 否则返回undefined
+      //找到满足条件的第一项 找到后端返回的路由数组里的某一项是不是已经在我这定义了且有页面
+      // 否则返回undefined
       let item = asyncRoutes.find((o) => o.path == e.frontpath);
-      //如果有item(有这个组件) 且路由里面没有这个路由
+      //如果有item(有这个组件) 就是后端有 我页面也有 就是没这个路由的话
       if (item && !router.hasRoute(item.path)) {
         //添加嵌套路由 第一个参数是父级路由名字 第二个参数是路由
         router.addRoute("admin", item);
         hasNewRouters = true;
       }
-      //如果存在子菜单 则再调用一次 传入数据为子菜单的数组
+      //如果存在子菜单 则再调用一次 传入数据为子菜单的数组 闭包
       if (e.child && e.child.length > 0) {
         findAndAddRoutesByMenus(e.child);
       }
@@ -173,7 +174,7 @@ export function addRoutes(menus) {
   };
   //执行传入的数组
   findAndAddRoutesByMenus(menus);
-  return hasNewRouters; //如果有新路由 把布尔值返回出去
+  return hasNewRouters; //如果有新路由 把布尔值返回出去 动态添加路由的跳转必须指定完整的路径
 }
 
 export const router = createRouter({

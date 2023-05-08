@@ -1433,6 +1433,8 @@ state:{
 
 实现根据后端传回来的数据，传回来什么就添加什么路由
 
+好处：减少前端操作，只需在后端进行添加新的路由菜单存储到数据库，还可以增加安全性和实用性，系统整体维护性高
+
 ## 添加路由
 
 动态路由主要通过两个函数实现。`router.addRoute()` 和 `router.removeRoute()`。它们**只**注册一个新的路由，也就是说，如果新增加的路由与当前位置相匹配，就需要你用 `router.push()` 或 `router.replace()` 来**手动导航**，才能显示该新路由。
@@ -1554,6 +1556,117 @@ router.beforeEach(async (to, from, next)=>{
   hasNewRoutes ? next(to.fullPath) : next();
   ...
 }
+~~~
+
+
+
+
+
+~~~js
+import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
+import store from "@/store";
+import { getToken } from "@/utils/auth";
+
+const routes: Array<RouteRecordRaw> = [
+  {
+    path: "/login",
+    name: "Login",
+    component: () => import("@/views/login/index.vue"),
+  },
+  {
+    path: "/layout",
+    name: "layout",
+    component: () => import("@/layout/index.vue"),
+    children: [
+      {
+        path: "/403",
+        name: "404",
+        component: () => import("@/views/exception/403.vue"),
+      },
+      {
+        path: "/404",
+        name: "404",
+        component: () => import("@/views/exception/404.vue"),
+      },
+      {
+        path: "/500",
+        name: "500",
+        component: () => import("@/views/exception/500.vue"),
+      },
+      {
+        path: "/home",
+        name: "首页",
+        component: () => import("@/views/home/index.vue"),
+      },
+    ],
+  },
+  {
+    path: "/",
+    name: "/",
+    redirect: "/login",
+  },
+  {
+    path: "/：pathMatch(.*)",
+    redirect: "/404",
+  },
+];
+const router = createRouter({
+  history: createWebHashHistory(),
+  routes,
+});
+var isF = false; //这个是用于判断动态路由是否已经被获取
+router.beforeEach(async (to, from) => {
+  if (to.path == "/login") {
+    return true;
+  }
+  if (!getToken()) {
+    return { path: "/login" };
+  } else {
+    if (isF) {
+      return true;
+    } else {
+      let add = store.getters.menuList || "";
+      routerData(add);
+      isF = true;
+      return { ...to, replace: true };
+    }
+  }
+});
+const routerData = (result: any) => {
+  let currenRoutes = router.options.routes;
+  if (result) {
+    result.forEach((item: any) => {
+      // has用于判断当前路由中是否已经具有，避免重复
+      var has = currenRoutes.some((it) => it.path == item.path);
+      if (!has) {
+        currenRoutes.push({
+          path: `${item.url}`,
+          name: item.name,
+          meta: {
+            title: item.name,
+          },
+          component: () => import(`@/views${item.url}`),
+        });
+        router.addRoute("layout", {
+          path: `${item.url}`,
+          name: item.name,
+          meta: {
+            title: item.name,
+          },
+          component: () => import(`@/views${item.url}`),
+        });
+      }
+      if (item.children && item.children.length) {
+        routerData(item.children);
+      }
+    });
+  }
+};
+
+export default router;
+
+
+
 ~~~
 
 
@@ -1776,11 +1889,7 @@ vnode：代表绑定元素的底层 VNode。
 
 prevNode：之前的渲染中代表指令所绑定元素的 VNode。仅在 beforeUpdate 和 updated 钩子中可用。
 
-
-
 ~~~
-
-
 
 
 
@@ -1867,7 +1976,7 @@ const emit=defineEmits(["success"])
 const uploadSuccess=(res)=>{
     //使用提交成功后的方法 getData获取数据
    emit("success",{
-    res,uploadFile,uploadFiles
+    res
    })
 }
 //上传失败
@@ -1988,7 +2097,7 @@ mycomponent组件内：
 # 获取管理员列表的请求处理
 
 ~~~js
-//获取管理员列表 传入参数是limit 和keyword 页面限制大小 和名称
+//获取管理员列表 传入参数是limit 和keyword 页面限制大小 和名称 传的是query参数 后面商品列表也用到了 封装在composable里面
 export function getManagerList(page,query={}){
    let q=[]  //空数组接收处理后的key=value
    for(const key in query){
@@ -2002,8 +2111,6 @@ export function getManagerList(page,query={}){
    return axios.get(`/manager/${page}${r}`)
 }
 ~~~
-
-
 
 
 
@@ -2326,3 +2433,238 @@ return f;
 
 
 其他内容大致差不多 就是写表格
+
+
+
+# axios请求传参方式
+
+~~~js
+传query参数字符串拼接 有的话就传
+
+请求：/admin/manager/:page?limit=10&keyword=ceshi
+请求参数 page路径参数  limit和keyword是query参数 用问号和前面隔开
+
+发请求传参：
+opt.getList(currentPage.value, searchForm)   //searchFrom就是query
+写请求：
+//获取管理员列表 传入参数是limit 和keyword 页面限制大小 和名称
+export function getGoodsList(page,query={}){   //传入page 和query参数
+   let q=[]  //空数组接收处理后的key=value
+   for(const key in query){
+      if(query[key]){
+         //将limit=对应的值推入到q里面 还有key
+         q.push(`${key}=${encodeURIComponent(query[key])}`)//将数据推入q 并处理encode
+      }
+   }
+   let r=q.join("&")  //将q里面的内容拼接成字符串 并且用&连接limit=10&keyword=ceshi
+   r=r?("?"+r):""  //在字符串前面加个问号 params参数特性？a=*** 其实可以在下面地址直接写？
+   return axios.get(`/admin/goods/${page}${r}`)
+}
+
+
+post请求传body参数
+//更改商品状态 body参数 status  ids
+export function updataGoodsStatus(ids,status){
+   axios.post('/admin/goods/changestatus',{ids,status})
+}
+
+//修改管理员 body参数 username password roleid status avatar
+export function updataGoods(id,data){
+  axios.post(`/admin/manager/${id}`,data)
+}
+~~~
+
+
+
+
+
+# 封装搜索栏及获取当前组件插槽内容
+
+ 搜索栏部分最基本的内容有关键词搜索 搜索和重置按钮
+
+~~~js
+<!-- 搜索 组件 内部使用插槽 搜索以及重置的自定义事件 并传过去search表单内容--> 
+<Search @search="getData" @reset="resetSearchForm" :model="searchForm">
+<SearchItem label="关键词">
+  <el-input
+    v-model="searchForm.title"
+    placeholder="商品名称"
+    clearable
+  ></el-input>
+</SearchItem>
+<!-- 商品分类插槽 -->
+<template #show>
+  <SearchItem label="商品分类">
+    <el-select
+      v-model="searchForm.category_id"
+      placeholder="请选择商品分类"
+      clearable
+    >
+      <el-option
+        v-for="item in category_list"
+        :key="item.id"
+        :label="item.name"
+        :value="item.id"
+      >
+      </el-option>
+    </el-select>
+  </SearchItem>
+</template>
+</Search>
+~~~
+
+封装Search组件
+
+~~~js
+<template>
+  <!-- 封装搜索 -->
+  <el-form :model="model" label-width="80px" class="mb-3" size="small">
+    <el-row :gutter="20">
+      <slot />
+      <template v-if="showSearch">
+        <slot name="show" />
+      </template>
+      <!-- offset	栅格左侧的间隔格数 -->
+      <el-col :span="8" :offset="showSearch ? 0 : 8">
+        <div class="flex items-center justify-end">
+          <el-button type="primary" @click="$emit('search')">搜索</el-button>
+          <el-button @click="$emit('reset')">重置</el-button>
+          <el-button v-if="hasShowSearch" type="primary" text @click="showSearch = !showSearch">
+            {{ showSearch ? "收起" : "展开" }}
+            <el-icon>
+              <ArrowUp v-if="showSearch" />
+              <ArrowDown v-else />
+            </el-icon>
+          </el-button>
+        </div>
+      </el-col>
+    </el-row>
+  </el-form>
+</template>
+
+<script setup>
+import { ref,useSlots } from "vue";
+
+defineProps({
+    model:Object
+})
+
+//自定义事件
+defineEmits(["search", "reset"]);
+//中间值 点击之后现实命名插槽内容
+const showSearch = ref(false);
+//获取当前组件插槽内容
+const slot=useSlots()
+//如果有值就是true 没就是false
+const hasShowSearch=ref(!!slot.show)
+//加一个!将原值取反成false 两个抵消 强行转换成布尔值
+</script>
+~~~
+
+
+
+封装SearchItem组件
+
+~~~js
+<template>
+  <!-- 封装搜索栏的每一项 -->
+  <el-col :span="8" :offset="0">
+    <el-form-item :label="label">
+      <slot />
+    </el-form-item>
+  </el-col>
+</template>
+
+<script setup>
+defineProps({
+  label: String,
+});
+</script>
+
+~~~
+
+
+
+# 梳理商品组件轮播图部分数据流动
+
+封装设置轮播图组件banners.vue 内容为一个drawer 
+
+~~~
+goods.vue
+<!-- 轮播图 -->  以下俩属性分别是获取节点和刷新数据
+<Banners ref="BannersRef" @reloadData="getData"/>
+
+<template>
+  <el-drawer
+    title="设置轮播图"
+    v-model="dialogVisible"  //打开和关闭轮播图
+    size="50%"
+    :destroy-on-close="true"  //关闭前销毁
+  >
+    <el-form :model="form" label-width="80px">
+      <el-form-item label="轮播图">
+        <ChooseIamge :limit="9" v-model="form.banners" />  使用ChooseIamge封装组件
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="submit" :loading="loading">提交</el-button>
+      </el-form-item>
+    </el-form>
+  </el-drawer>
+</template>
+
+<script setup>
+import { ref, reactive } from "vue";
+import ChooseIamge from "@/components/chooseImage.vue";
+import {readGoods,setGoodsBanner} from '@/api/goods.js'
+import {toast} from '@/composables/util.js'
+const dialogVisible = ref(false);
+
+const form = reactive({
+  banners: [],  //表单内容就是一个url地址的数组
+});
+
+const goodsId=ref(0)//获取到当前选择的商品id
+//打开drawer之后将本行数据的id存起来 然后发请求获取当前有哪些轮播图并给到form展示
+const open=(row)=>{
+   goodsId.value=row.id
+   row.bannersLoading=true
+   readGoods(goodsId.value).then(res=>{
+    // 将返回数据的banner赋值给form,将banner里面的每一项的每一个url组成数组给到form
+    form.banners=res.goodsBanner.map(o=>o.url)
+    dialogVisible.value=true
+   }).finally(()=>{
+    row.bannersLoading=false
+   })
+}
+
+//提交
+const emit=defineEmits(['reloadData'])
+const loading=ref(false)
+const submit=()=>{
+    loading.value=true
+    setGoodsBanner(goodsId.value,form).then(res=>{
+        toast("设置轮播图成功")
+        dialogVisible.value=false
+        emit('reloadData')//刷新数据
+    }).finally(()=>{
+        loading.value=false
+    })
+}
+
+defineExpose({
+    open
+})
+</script>
+~~~
+
+关于选择图片里的修改
+
+~~~
+原本这个组件只能选择一张图片
+修改后传给本组件一个limit 默认为1  banner->choose->mainImage 均使用props传输数据 将limit传递
+如果limit是1的话 就只传一张图片
+
+如果是多张 比如现在处理的多个轮播图
+那么要将本身的modelValue的图片还有新选择的图片合并成数组传递到modelvalue
+~~~
+

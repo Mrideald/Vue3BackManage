@@ -43,7 +43,6 @@ const emit=defineEmits(["success"])
 //上传成功 第一个参数是成功后服务器返回的信息 后面也是
 const uploadSuccess=(res)=>{
     //使用提交成功后的方法 getData获取数据
-     console.log(res,'res');
    emit("success",{
     res
    })

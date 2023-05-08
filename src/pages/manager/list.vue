@@ -1,29 +1,18 @@
 <template>
   <el-card shadow="never" class="border-0">
-    <!-- 搜索 -->
-    <el-form :model="searchForm" label-width="80px" class="mb-3" size="small">
-      <el-row :gutter="20">
-        <el-col :span="8" :offset="0">
-          <el-form-item label="关键词">
-            <el-input
-              v-model="searchForm.keyword"
-              placeholder="管理员昵称"
-              clearable
-            ></el-input>
-          </el-form-item>
-        </el-col>
-        <!-- offset	栅格左侧的间隔格数 -->
-        <el-col :span="8" :offset="8">
-          <div class="flex items-center justify-end">
-            <el-button type="primary" @click="getData">搜索</el-button>
-            <el-button @click="resetSearchForm">重置</el-button>
-          </div>
-        </el-col>
-      </el-row>
-    </el-form>
+    <!-- 搜索 组件 内部使用插槽-->
+    <Search @search="getData" @reset="resetSearchForm" :model="searchForm">
+      <SearchItem label="关键词">
+        <el-input
+          v-model="searchForm.keyword"
+          placeholder="管理员昵称"
+          clearable
+        ></el-input>
+      </SearchItem>
+    </Search>
 
     <!-- 新增和刷新 -->
-    <ListHeader @create="handleCreate" @refresh="getData"/>
+    <ListHeader @create="handleCreate" @refresh="getData" />
 
     <!-- 表格 -->
     <el-table :data="list" stripe style="width: 100%" v-loading="loading">
@@ -172,7 +161,9 @@ import {
 } from "@/api/manager.js";
 import FormDrawer from "@/components/FormDrawer.vue";
 import ChooseImage from "@/components/chooseImage.vue";
-import ListHeader from '@/components/ListHeader.vue'
+import ListHeader from "@/components/ListHeader.vue";
+import Search from "@/components/Search.vue";
+import SearchItem from "../../components/SearchItem.vue";
 // 引入封装组件
 import { useInitTable, useInitForm } from "../../composables/useCommon";
 const roles = ref([]);
@@ -200,8 +191,8 @@ const {
     total.value = res.totalCount;
     roles.value = res.roles;
   },
-  delete:deleteManager,
-  updataStatus:updataManagerStatus,
+  delete: deleteManager,
+  updataStatus: updataManagerStatus,
 });
 
 // 新增和修改内容
@@ -223,7 +214,7 @@ const {
     status: 1,
     avatar: "",
   },
-  rules:{
+  rules: {
     username: [
       {
         required: true,
