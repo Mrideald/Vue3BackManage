@@ -176,7 +176,13 @@
                 :loading="scope.row.bannersLoading"
                 >设置轮播图</el-button
               >
-              <el-button class="px-1" size="small" text type="primary"
+              <el-button
+                class="px-1"
+                size="small"
+                text
+                :type="scope.row.content== null ? 'danger' : 'primary'"
+                @click="handleSetGoodsContent(scope.row)"
+                :loading="scope.row.contentLoading"
                 >商品详情</el-button
               >
               <!-- 气泡确认框 确认删除-->
@@ -304,7 +310,8 @@
       </FormDrawer>
     </el-card>
     <!-- 轮播图 -->
-    <Banners ref="BannersRef" @reloadData="getData"/>
+    <Banners ref="BannersRef" @reloadData="getData" />
+    <Content ref="ContentRef" @reloadData="getData" />
   </div>
 </template>
 <script setup>
@@ -323,6 +330,7 @@ import ListHeader from "@/components/ListHeader.vue";
 import Search from "@/components/Search.vue";
 import SearchItem from "../../components/SearchItem.vue";
 import Banners from "./banners.vue";
+import Content from "./content.vue";
 // 引入封装组件
 import { useInitTable, useInitForm } from "../../composables/useCommon";
 // 使用封装组件 分页器 获取数据 搜索内容 删除 修改状态
@@ -351,6 +359,7 @@ const {
     //给list添加一个statusloading属性 加载中 其实可以用不到 因为下面返回的是函数不是promise对象 函数一下就执行了 显示不出加载中
     list.value = res.list.map((o) => {
       o.bannersLoading = false;
+      o.contentLoading = false;
       return o;
     });
     total.value = res.totalCount;
@@ -442,5 +451,11 @@ getCategoryList().then((res) => {
 const BannersRef = ref(null);
 const handleSetGoodsBanners = (row) => {
   BannersRef.value.open(row);
+};
+
+//设置商品详情
+const ContentRef = ref(null);
+const handleSetGoodsContent = (row) => {
+  ContentRef.value.open(row);
 };
 </script>
