@@ -163,6 +163,8 @@
                 >修改</el-button
               >
               <el-button class="px-1" size="small" text type="primary"
+              @click="handleSetGoodsSkus(scope.row)"
+              :loading="scope.row.skusLoading"
                 >商品规格</el-button
               >
               <el-button
@@ -309,9 +311,10 @@
         </el-form>
       </FormDrawer>
     </el-card>
-    <!-- 轮播图 -->
+    <!-- 一些点击的属性 -->
     <Banners ref="BannersRef" @reloadData="getData" />
     <Content ref="ContentRef" @reloadData="getData" />
+    <Skus ref="SkusRef" @reloadData="getData" />
   </div>
 </template>
 <script setup>
@@ -331,6 +334,7 @@ import Search from "@/components/Search.vue";
 import SearchItem from "../../components/SearchItem.vue";
 import Banners from "./banners.vue";
 import Content from "./content.vue";
+import Skus from "./skus.vue";
 // 引入封装组件
 import { useInitTable, useInitForm } from "../../composables/useCommon";
 // 使用封装组件 分页器 获取数据 搜索内容 删除 修改状态
@@ -360,6 +364,7 @@ const {
     list.value = res.list.map((o) => {
       o.bannersLoading = false;
       o.contentLoading = false;
+      o.skusLoading = false;
       return o;
     });
     total.value = res.totalCount;
@@ -457,5 +462,11 @@ const handleSetGoodsBanners = (row) => {
 const ContentRef = ref(null);
 const handleSetGoodsContent = (row) => {
   ContentRef.value.open(row);
+};
+
+//设置商品规格
+const SkusRef = ref(null);
+const handleSetGoodsSkus = (row) => {
+  SkusRef.value.open(row);
 };
 </script>

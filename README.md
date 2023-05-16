@@ -2,6 +2,8 @@
 
 
 
+项目代码多用组合式api对逻辑进行封装，提高代码的可读性和可维护性
+
 ## 难点积累
 
 封装内容：列表的增删改查逻辑 新增和刷新组件
@@ -89,6 +91,26 @@ const handleSubmit = () => {
 
 
 ## 积累Space
+
+
+
+
+
+### 组合式API
+
+Vue 3 的组合式 API 是一个全新的 API，它允许您编写可重用的逻辑，而不必使用 Vue 2.x 的选项 API 或混入（mixins）等方式。相比之下，组合式 API 更加模块化和可组合，使得代码更易于维护和测试。
+
+简单来说，组合式 API 允许您将组件的逻辑拆分成更小的函数，每个函数都有自己的输入和输出，并且可以在组件中组合使用这些函数来实现复杂的行为。这些函数可以被组件内的其他函数或组件外的代码重复使用，从而提高了代码的复用性和可读性。
+
+组合式 API 的核心是 `setup()` 函数，它在组件创建之前就会执行，返回一个包含组件状态和方法的对象。在 `setup()` 函数中，您可以使用 Vue 提供的响应式 API 来创建响应式状态，并返回一个将这些状态和方法暴露给组件的对象。
+
+除了 `setup()` 函数之外，组合式 API 还提供了一些常见的逻辑函数，例如 `computed()`、`watch()`、`onMounted()` 等，它们可以让您更轻松地编写逻辑，并且可以与 `setup()` 函数组合使用。
+
+总之，组合式 API 是 Vue 3 中非常强大和灵活的特性，可以让您更好地组织和重用组件逻辑，并且提高代码的可读性和可维护性。
+
+
+
+
 
 ### EventTarget.addEventListener()
 
@@ -2812,5 +2834,133 @@ setup:(editor)=>{
   
   
   chooseImage里面的内容有点乱 这边过了
+~~~
+
+
+
+
+
+# 规格选项编写以及组合式API理解
+
+商品管理中 点击配置规格后 在多规格页面 配置规格头部和规格内容 将规格头部和规格内容封装成一个组件 将规格内容页封装成一个组件
+
+要将数据渲染在规格选项中 然后数据在点击规格选项后发起的请求返回的res中，这是skus页面
+
+
+
+使用组合式API综合管理这些数据
+
+~~~js
+代码内容
+import { ref } from "vue";
+import { createGoodsSkusCard } from "@/api/goods.js";
+
+//在规格组件中 获取到商品的信息传给当前文件的函数
+
+//当前商品ID
+export const goodsId = ref(0);
+
+//规格选项列表 打开弹框之后就把数据存在这里
+export const sku_card_list = ref([]);
+
+//初始化规格选项列表  d为传入的res 即当前商品的所有数据
+export function initSkuCardList(d) {
+    //存储在skuList中
+  sku_card_list.value = d.goodsSkusCard.map((item) => {
+    item.text = item.name; //给列表添加一个中间值 如果修改成功那就是这个 不成功就是原来的name 防止修改了不知道原来是什么值
+    item.loading = false;
+    item.goodsSkusCardValue.map((v) => {
+      v.text = v.value || "属性值";
+      return v;
+    });
+    return item;  //返回添加text后的数据
+  });
+}
+
+//初始化规格值   找到列表里面和传入的id一致的item
+export function initSkusCardItem(id) {
+  const item = sku_card_list.value.find((o) => o.id == id);
+  return {
+    item,
+  };
+}
+//添加规格选项
+export const btnLoading = ref(false);
+//新增规格选项的请求
+export function addSkuCardEvent() {
+  btnLoading.value = true;
+  createGoodsSkusCard({
+    goods_id: goodsId.value, //商品ID
+    name: "规格选项", //规格名称
+    order: 50, //排序
+    type: 0, //规格类型 0文字})
+  })
+    .then((res) => {
+      sku_card_list.value.push({
+        //将新增的选项推入到list，然后加上text和loading等内容
+        ...res,
+        text: res.name,
+        loading: false,
+        goodsSkusCardValue: [],
+      });
+    })
+    .finally(() => {
+      btnLoading.value = false;
+    });
+}
+
+~~~
+
+
+
+数据来源：
+
+~~~js
+//在skus.vue里面引入上面封装的函数
+打开formdrawer的事件
+const open = (row) => {
+.....................
+  readGoods(goodsId.value)
+    .then((res) => {
+      //初始化表单内容
+.....................
+      //传给封装js
+      initSkuCardList(res);
+      formDrawerRef.value.open();
+    })
+    .finally(() => {
+      row.skusLoading = false;
+    });
+};
+~~~
+
+
+
+数据使用:
+
+~~~js
+在需要使用的地方引入 因为上面将数据传入了list 直接使用list即可 第二个是加载状态以及请求回调
+import { sku_card_list,btnLoading,addSkuCardEvent } from "@/composables/useSku.js";
+
+请求回调直接写在新增规格选项的按钮上 点击事件
+
+数据用来循环或者渲染等
+
+
+渲染规格内容
+<template>
+  <div v-for="(tag,index) in item.goodsSkusCardValue" :key="index">
+  {{ tag.text }}
+  </div>
+</template>
+
+<script setup>
+import { initSkusCardItem } from "@/composables/useSku.js";
+
+const props = defineProps({
+  skuCardId: [Number, String],
+});
+
+const { item } = initSkusCardItem(props.skuCardId);
 ~~~
 
