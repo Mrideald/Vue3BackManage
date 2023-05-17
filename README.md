@@ -4,6 +4,10 @@
 
 项目代码多用组合式api对逻辑进行封装，提高代码的可读性和可维护性
 
+
+
+体验感：在请求之前添加loading 请求完成之后取消loading
+
 ## 难点积累
 
 封装内容：列表的增删改查逻辑 新增和刷新组件
@@ -498,6 +502,51 @@ var emails = users.map(user => user.email);
   <div>左侧元素</div>
   <div style="margin-left: auto;">右侧元素</div>
 </div>
+~~~
+
+
+
+### 详解Splice
+
+~~~
+详解splice
+
+是JavaScript中的一个数组方法 可以添加或者删除数组
+
+    array.splice(start, deleteCount, item1, item2, ...)
+
+其中，start表示起始位置，deleteCount表示要删除的元素个数，item1, item2, ...表示要添加的元素。
+    let arr = [1, 2, 3, 4, 5];
+    arr.splice(2, 2);   // 删除从第3个元素开始的2个元素
+    console.log(arr);   // 输出 [1, 2, 5]
+
+    let arr = [1, 2, 3, 4, 5];
+    arr.splice(2, 0, 6, 7);   // 在第3个元素的位置插入6和7
+    console.log(arr);   // 输出 [1, 2, 6, 7, 3, 4, 5]
+
+如果是要删除某个数字并替换成新的
+
+arr.splice(2,1,666)    //删除索引为2的 添加为666
+~~~
+
+值得注意的是splice函数的返回值
+
+一个包含了删除的元素的数组。
+
+如果只移除一个元素，则返回一个元素的数组。
+
+如果没有删除任何元素，则返回一个空数组。
+
+这个返回值的应用：
+
+~~~
+交换数组俩值
+//调换位置  [1,2,3,4]   [1,1,3,4] [2,1,3,4]
+function swapArray(arr, index1, index2) {
+  //删除index2索引代表的值 替换成arr[index1]
+  arr[index1] = arr.splice(index2, 1, arr[index1])[0];
+  return arr;
+}
 ~~~
 
 

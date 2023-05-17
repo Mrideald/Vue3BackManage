@@ -37,12 +37,28 @@ export function setGoodsBanner(id,data){
   return axios.post(`/admin/goods/banners/${id}`,data)
 }
 
-//更新商品规格
+//设置商品规格
 export function updateGoodsSkus(id,data){
   return axios.post(`/admin/goods/updateskus/${id}`,data)
 }
 
-//新增规格方法
+//新增规格方法 新增一个card
 export function createGoodsSkusCard(data){
   return axios.post("/admin/goods_skus_card",data)
+}
+
+
+//修改商品规格选项（标题）
+export function updateGoodsSkusCard(id,data){
+  return axios.post(`/admin/goods_skus_card/${id}`,data)
+}
+
+//删除规格选项
+export function deleteGoodsSkusCard(id){
+  return axios.post(`/admin/goods_skus_card/${id}/delete`)
+}
+
+//排序规格选项
+export function sortGoodsSkusCard(data){
+  return axios.post(`/admin/goods_skus_card/sort`,data)
 }

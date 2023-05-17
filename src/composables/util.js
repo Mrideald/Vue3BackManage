@@ -58,3 +58,20 @@ export function queryParams(query) {
   r = r ? "?" + r : ""; //在字符串前面加个问号 params参数特性？a=*** 其实可以在下面地址直接写？
   return r;
 }
+
+//上移
+export function useArrayMoveUp(arr,index) {
+  swapArray(arr,index,index-1)
+}
+
+//下移
+export function useArrayMoveDown(arr,index) {
+  swapArray(arr,index,index+1)
+}
+
+//调换位置  [1,2,3,4]   [2,2,3,4] [2,1,3,4]
+function swapArray(arr, index1, index2) {
+  //删除index2索引代表的值 替换成arr[index1]
+  arr[index1] = arr.splice(index2, 1, arr[index1])[0];
+  return arr;
+}
