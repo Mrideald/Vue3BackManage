@@ -549,6 +549,14 @@ function swapArray(arr, index1, index2) {
 }
 ~~~
 
+### input输入框中的change事件的参数
+
+~~~
+<el-input  v-model="tag.text" size="small" @change="handleChange($event,tag)" ></el-input>
+
+第一个参数是$event 获取到当前输入的值
+~~~
+
 
 
 # 使用vue-router
