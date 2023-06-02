@@ -87,6 +87,7 @@ const handleMultDelete = () => {
     .then((res) => {
       toast("删除成功")
       if(multipleTableRef.value){
+        //清空选中
         multipleTableRef.value.clearSelection()
       }
       getData()
@@ -128,6 +129,7 @@ const handleMultStatusChange = (status) => {
     multipleTableRef,//表格节点获取
     handleMultDelete,//多选删除
     handleMultStatusChange,//修改多个状态
+    multiSelectionIds
   };
 }
 

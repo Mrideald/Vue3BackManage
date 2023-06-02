@@ -18,7 +18,7 @@
             @change="handleUpdate(item)"
           >
             <template #append>
-              <el-icon>
+              <el-icon class="cursor-pointer" @click="handleChooseSku(item)">
                 <more />
               </el-icon>
             </template>
@@ -66,10 +66,14 @@
       >添加规格</el-button
     >
   </el-form-item>
+
+  <ChooseSku ref="ChooseSkuRef"/>
 </template>
 
 <script setup>
+import {ref} from 'vue'
 import SkuCardItem from "./skuCardItem.vue";
+import ChooseSku from '@/components/ChooseSku.vue'
 import {
   sku_card_list,
   btnLoading,
@@ -79,6 +83,11 @@ import {
   sortCard,
   bodyLoading,
 } from "@/composables/useSku.js";
+
+const ChooseSkuRef=ref(null)
+const handleChooseSku=(item)=>{
+  ChooseSkuRef.value.open()
+}
 </script>
 
 <style>

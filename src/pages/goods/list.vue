@@ -41,11 +41,38 @@
       </Search>
       <!-- 新增和刷新等等五个按钮 -->
       <ListHeader
-        layout="create,delete,refresh"
+        layout="create,refresh"
         @create="handleCreate"
         @refresh="getData"
-        @delete="handleMultDelete"
       >
+        <el-button
+          size="small"
+          type="danger"
+          @click="handleMultDelete"
+          v-if="searchForm.tab != 'delete'"
+          >批量删除</el-button
+        >
+
+        <el-button
+          size="small"
+          type="warning"
+          @click="handleRestoreGoods"
+          v-else
+          >恢复商品</el-button
+        >
+
+        <el-popconfirm
+          v-if="searchForm.tab == 'delete'"
+          title="是否要彻底删除选中商品?"
+          confirm-button-text="确认"
+          cancel-button-text="取消"
+          @confirm="handleDestoryGoods"
+        >
+          <!-- confirm确认删除后调用自定义删除事件 -->
+          <template #reference>
+            <el-button size="small" type="danger">彻底删除</el-button>
+          </template>
+        </el-popconfirm>
         <!-- 上架状态就是1 反之是0 -->
         <!-- 上架和下架都在all显示 其中上架在所有下架中显示 下架在所有上架中显示 -->
         <el-button
@@ -162,9 +189,18 @@
                 @click="handleEdit(scope.row)"
                 >修改</el-button
               >
-              <el-button class="px-1" size="small" text type="primary"
-              @click="handleSetGoodsSkus(scope.row)"
-              :loading="scope.row.skusLoading"
+              <el-button
+                class="px-1"
+                size="small"
+                text
+                :type="
+                  scope.row.goods_skus.length ||
+                  scope.row.goods_skus_card.length != 0
+                    ? 'primary'
+                    : 'danger'
+                "
+                @click="handleSetGoodsSkus(scope.row)"
+                :loading="scope.row.skusLoading"
                 >商品规格</el-button
               >
               <el-button
@@ -182,7 +218,7 @@
                 class="px-1"
                 size="small"
                 text
-                :type="scope.row.content== null ? 'danger' : 'primary'"
+                :type="scope.row.content == null ? 'danger' : 'primary'"
                 @click="handleSetGoodsContent(scope.row)"
                 :loading="scope.row.contentLoading"
                 >商品详情</el-button
@@ -192,7 +228,7 @@
                 title="是否要删除该商品?"
                 confirm-button-text="确认"
                 cancel-button-text="取消"
-                @confirm="handleDelete(scope.row.id)"
+                @confirm="handleDelete([scope.row.id])"
               >
                 <!-- confirm确认删除后调用自定义删除事件 -->
                 <template #reference>
@@ -325,6 +361,8 @@ import {
   createGoods,
   updataGoods,
   deleteGoods,
+  restoreGoods,
+  destoryGoods,
 } from "@/api/goods.js";
 import { getCategoryList } from "@/api/category.js";
 import FormDrawer from "@/components/FormDrawer.vue";
@@ -337,6 +375,7 @@ import Content from "./content.vue";
 import Skus from "./skus.vue";
 // 引入封装组件
 import { useInitTable, useInitForm } from "../../composables/useCommon";
+import { toast } from "@/composables/util.js";
 // 使用封装组件 分页器 获取数据 搜索内容 删除 修改状态
 const {
   searchForm,
@@ -352,6 +391,7 @@ const {
   multipleTableRef,
   handleMultDelete,
   handleMultStatusChange,
+  multiSelectionIds,
 } = useInitTable({
   searchForm: {
     title: "",
@@ -372,7 +412,6 @@ const {
   delete: deleteGoods,
   updataStatus: updataGoodsStatus,
 });
-
 // 新增和修改内容
 const {
   FormDrawerRef,
@@ -454,19 +493,36 @@ getCategoryList().then((res) => {
 
 //设置轮播图
 const BannersRef = ref(null);
-const handleSetGoodsBanners = (row) => {
-  BannersRef.value.open(row);
-};
+const handleSetGoodsBanners = (row) => BannersRef.value.open(row);
 
 //设置商品详情
 const ContentRef = ref(null);
-const handleSetGoodsContent = (row) => {
-  ContentRef.value.open(row);
-};
+const handleSetGoodsContent = (row) => ContentRef.value.open(row);
 
 //设置商品规格
 const SkusRef = ref(null);
-const handleSetGoodsSkus = (row) => {
-  SkusRef.value.open(row);
-};
+const handleSetGoodsSkus = (row) => SkusRef.value.open(row);
+
+//批量恢复
+const handleRestoreGoods = () => useMultAction(restoreGoods, "恢复");
+
+//彻底删除
+const handleDestoryGoods = () => useMultAction(destoryGoods, "删除");
+
+//封装恢复和删除方法
+function useMultAction(func, text) {
+  loading.value = true;
+  func(multiSelectionIds.value)
+    .then((res) => {
+      toast(text + "成功");
+      if (multipleTableRef.value) {
+        // 清空选中
+        multipleTableRef.value.clearSelection();
+      }
+      getData();
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+}
 </script>
