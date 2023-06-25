@@ -17,6 +17,7 @@ const ManagerList=()=>import('@/pages/manager/list.vue')
 const AccessList=()=>import('@/pages/access/list.vue')
 const RoleList=()=>import('@/pages/role/list.vue')
 const SkusList=()=>import('@/pages/skus/list.vue')
+const LevelList=()=>import('@/pages/level/list.vue')
 //默认路由 所有路由共享
 const routes = [
   {
@@ -147,6 +148,14 @@ const asyncRoutes = [
     meta: {
       title: "规格管理",
     },
+  },
+  {
+    path:'/level/list',
+    name:'/level/list',
+    component:LevelList,
+    meta:{
+      title:"会员等级"
+    }
   }
 ];
 //动态添加路由  递归
@@ -164,7 +173,7 @@ export function addRoutes(menus) {
       if (item && !router.hasRoute(item.path)) {
         //添加嵌套路由 第一个参数是父级路由名字 第二个参数是路由
         router.addRoute("admin", item);
-        hasNewRouters = true;
+        hasNewRouters = true; 
       }
       //如果存在子菜单 则再调用一次 传入数据为子菜单的数组 闭包
       if (e.child && e.child.length > 0) {
