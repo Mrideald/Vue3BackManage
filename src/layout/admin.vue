@@ -19,7 +19,6 @@
       </el-main>
     </el-container>
   </el-container>
-  <div>随便改点</div>
 </template>
 
 <script setup>
@@ -31,5 +30,6 @@ import FTagList from "./components/FTagList.vue";
 <style>
 .el-aside {
   transition: all 0.2s;
+  
 }
 </style>
