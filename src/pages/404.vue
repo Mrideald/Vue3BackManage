@@ -9,5 +9,6 @@
         <el-button  type="primary" @click="this.$router.push('/')">点击回到首页</el-button>
       </template>
     </el-result>
+    <h1>测试代码</h1>
   </div>
 </template>
